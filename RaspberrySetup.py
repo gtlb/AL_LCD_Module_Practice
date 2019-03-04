@@ -1,13 +1,11 @@
 import RPi.GPIO as GPIO
-
 from Constants.Enums import Axis as AXIS
 from Constants.Enums import Direction as DIR
 from Constants.Enums import PinMap as PIN
-
 from Models.RunConfig import RunConfig as RC
 
 def Setup():
-  Runconfig = RC.getInstance()
+  RunConfig = RC.getInstance()
 
   #### Some Configurations ####
   pinSol = RunConfig.pinSol

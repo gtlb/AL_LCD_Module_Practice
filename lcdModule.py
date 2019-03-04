@@ -8,16 +8,18 @@ from pynput.keyboard import Key, Listener, Controller
 from Constants.Enums import Axis as AXIS
 from Constants.Enums import IO as IO
 from Constants.Enums import PageStyle as PAGE_STYLE
+from Constants.Enums import Direction as DIR
 
 __verbose__   = False
 __raspberry__ = False
 
 FH.LoadRunConfig()
-Runconfig = RC.getInstance()
+RunConfig = RC.getInstance()
+
+import Jog
 
 if __raspberry__ :
   import RaspberrySetup as RS
-  import Jog
   RS.Setup()
 
 
@@ -155,11 +157,12 @@ def on_press(key):
       axis = stateMachine[STATE.JOG][VALUE][jogIndex]
 
       jogMesage = ", Plus" if key is Key.up else ", Minus"
-      print("Jogging Axis " + str(axis) + jogMesage)
 
-      if __raspberry__ :
-        direction = Direction.PLUS if key is Key.up else Direction.MINUS
-        Jog.StartJog(axis, direction)
+      if __verbose__:
+        print("Jogging Axis " + str(axis) + jogMesage)
+
+      direction = DIR.PLUS if key is Key.up else DIR.MINUS
+      Jog.StartJog(axis, direction)
 
 
 def on_release(key):
@@ -175,9 +178,10 @@ def on_release(key):
       moveCursorUpDown(currentState, key)
 
     if pageMode is PAGE_STYLE.JOG:
-      print("Stop Jogging")
-      if __raspberry__ :
-        Jog.StopJog()
+      if __verbose__:
+        print("Stop Jogging")
+
+      Jog.StopJog()
 
     if pageMode is PAGE_STYLE.EDIT:
       # TODO: Not yet implemented. Up and down change values.

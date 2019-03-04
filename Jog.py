@@ -1,11 +1,21 @@
 import threading
-import RPi.GPIO as GPIO
-
+import time
 from threading import Lock
-
 from Constants.Enums import Axis as AXIS
 from Constants.Enums import Direction as DIR
 from Constants.Enums import PinMap as PIN
+from Models.RunConfig import RunConfig as RC
+
+__verbose__ = False
+__raspberry__ = False
+
+RunConfig = RC.getInstance()
+
+pinSol = RunConfig.pinSol
+pinMap = RunConfig.pinMap
+
+if __raspberry__:
+  import RPi.GPIO as GPIO
 
 isJogging = False
 isJoggingLock = Lock()
@@ -16,7 +26,7 @@ pulseCounter = 0
 def StartJog(axis, direction):
   global joggingAxis, pulseCounter
 
-  GPIO.output(pinMap[axis][PIN.DIR], direction)
+  GPIOOutput(pinMap[axis][PIN.DIR], direction)
 
   SetIsJogging(True)
   joggingAxis = axis
@@ -27,10 +37,10 @@ def StopJog():
   SetIsJogging(False)
 
 def SetIsJogging(value):
-  global isJogging
+  global isJogging, isJoggingLock
 
   isJoggingLock.acquire()
-  isJoggingLock = value
+  isJogging = value
   isJoggingLock.release()
 
 def JogHandler():
@@ -38,7 +48,9 @@ def JogHandler():
 
   while True:
     if isJogging:
-      GPIO.output(pinMap[joggingAxis][PIN.CLK], (pulseCounter+1)%2)
+      if __verbose__:
+        print("Jogging in Axis: " + joggingAxis)
+      GPIOOutput(pinMap[joggingAxis][PIN.CLK], (pulseCounter+1)%2)
       pulseCounter += 1
 
       time.sleep(RunConfig.axisDelay[joggingAxis])
@@ -46,3 +58,7 @@ def JogHandler():
 jogHandlerThread = threading.Thread(target = JogHandler)
 jogHandlerThread.daemon = True
 jogHandlerThread.start()
+
+def GPIOOutput(pin, value):
+  if __raspberry__:
+    GPIO.output(pin, value)
