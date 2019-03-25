@@ -1,5 +1,6 @@
 import threading
 import time
+import Jog
 import DisplayLCD as LCD
 import Utilities.FileHandler as FH
 from Models.RunConfig import RunConfig as RC
@@ -11,17 +12,12 @@ from Constants.Enums import PageStyle as PAGE_STYLE
 from Constants.Enums import Direction as DIR
 
 __verbose__   = False
-__raspberry__ = True
-
-FH.LoadRunConfig()
-RunConfig = RC.getInstance()
-
-import Jog
+__raspberry__ = False
 
 if __raspberry__ :
   import RaspberrySetup as RS
   RS.Setup()
-  
+
   import serial
 
   port = serial.Serial("/dev/ttyS0", baudrate=9600, timeout=3.0)
@@ -247,7 +243,6 @@ def DisplayLCD():
   displayTexts = []
 
   # Get a list of strings to display.
-  print("--------------------")
   if currentState == STATE.JOG_AXIS:
     jogIndex = cursorIndex[STATE.JOG] + pageDisplayIndex[STATE.JOG]
     axis = stateMachine[STATE.JOG][VALUE][jogIndex]
@@ -260,21 +255,19 @@ def DisplayLCD():
   else:
     displayTexts = LCD.DisplayEntries(displayList, pdi, ci, displayLen)
 
-
-  for i in range(LCD_LEN):
-    print(displayTexts[i])
-  print("--------------------")
-
-
   if __raspberry__ :
-#    port.write('$C\r'.encode())
-
     for i in range(LCD_LEN):
       displayText = displayTexts[i]
-      displayText = displayText + " " * (20 - len(displayText))      
+      displayText = displayText + " " * (20 - len(displayText))
 
       port.write(('$G,' + str(i%4+1) + ',1\r').encode())
       port.write(('$T,' + displayText + '\r').encode())
+
+  else:
+    print("--------------------")
+    for i in range(LCD_LEN):
+      print(displayTexts[i])
+    print("--------------------")
 
 
 StartKeyListener()

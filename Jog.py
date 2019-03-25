@@ -7,7 +7,7 @@ from Constants.Enums import PinMap as PIN
 from Models.RunConfig import RunConfig as RC
 
 __verbose__ = False
-__raspberry__ = True
+__raspberry__ = False
 
 RunConfig = RC.getInstance()
 
