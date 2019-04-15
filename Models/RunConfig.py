@@ -64,6 +64,7 @@ class RunConfig:
       RunConfig.pinSol = loadedPinSol
 
       RunConfig.pwm = {}
+      RunConfig.pwm[PWM.ON_OFF_PIN] = int(config.get('PWM', PWM.ON_OFF_PIN))
       RunConfig.pwm[PWM.PWM_PIN] = int(config.get('PWM', PWM.PWM_PIN))
       RunConfig.pwm[PWM.FREQUENCY] = int(config.get('PWM', PWM.FREQUENCY))
       RunConfig.pwm[PWM.DUTY_CYCLE] = int(config.get('PWM', PWM.DUTY_CYCLE))

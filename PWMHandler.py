@@ -4,6 +4,7 @@ from threading import Lock
 from Models.RunConfig import RunConfig as RC
 from Constants.Enums import PwmConfig as PWM
 
+__verbose__ = False
 __raspberry__ = False
 
 if __raspberry__:
@@ -26,6 +27,8 @@ def SetIsRunPWM(value):
 
 def UpdateDutyCycle():
   if __raspberry__:
+    global pwmInst
+
     pwmInst.ChangeDutyCycle(RunConfig.pwm[PWM.DUTY_CYCLE])
 
 def StartPWM():
@@ -40,6 +43,13 @@ def StopPWM():
 def RunPWM():
   # Setup PWM
   if __raspberry__:
+    global pwmInst
+    GPIO.setmode(GPIO.BOARD)
+
+    GPIO.setup(RunConfig.pwm[PWM.ON_OFF_PIN], GPIO.OUT, initial = GPIO.LOW)
+    GPIO.setup(RunConfig.pwm[PWM.PWM_PIN], GPIO.OUT, initial = GPIO.LOW)
+
+    GPIO.output(RunConfig.pwm[PWM.ON_OFF_PIN], GPIO.HIGH)
     pwmInst = GPIO.PWM(RunConfig.pwm[PWM.PWM_PIN], RunConfig.pwm[PWM.FREQUENCY])
     pwmInst.start(RunConfig.pwm[PWM.DUTY_CYCLE])
 
@@ -48,10 +58,10 @@ def RunPWM():
       # PWM Cleanup
       if __raspberry__:
         pwmInst.stop()
-        GPIO.cleanUp()
+        GPIO.cleanup()
       break
 
-    print("PWM RUNNING")
-    # Run PWM
+    if __verbose__:
+      print("PWM RUNNING " + str(RunConfig.pwm[PWM.DUTY_CYCLE]))
 
     time.sleep(1)
