@@ -25,5 +25,13 @@ Direction = enum(
 PageStyle = enum(
   NAVIGATION = "NAVIGATION",
   JOG = "JOG",
+  PWM = "PWM",
   EDIT = "EDIT"
+)
+
+PwmConfig = enum(
+  FREQUENCY = "Frequency",
+  DUTY_CYCLE = "DutyCycle",
+  FREQUENCY_LIST = "FrequencyList",
+  DUTY_CYCLE_LIST = "DutyCycleList"
 )

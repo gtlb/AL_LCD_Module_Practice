@@ -1,8 +1,11 @@
+import ast
 import configparser
 import Constants.Constants as C
+from pynput.keyboard import Key
 from Constants.Enums import Axis as AXIS
 from Constants.Enums import Direction as DIR
 from Constants.Enums import PinMap as PIN
+from Constants.Enums import PwmConfig as PWM
 
 class RunConfig:
   __instance = None
@@ -11,6 +14,7 @@ class RunConfig:
   pinMap = None
   axisDelay = None
   stepDirection = None
+  pwm = None
 
   @staticmethod
   def getInstance():
@@ -59,9 +63,36 @@ class RunConfig:
 
       RunConfig.pinSol = loadedPinSol
 
+      RunConfig.pwm = {}
+      RunConfig.pwm[PWM.FREQUENCY] = int(config.get('PWM', PWM.FREQUENCY))
+      RunConfig.pwm[PWM.DUTY_CYCLE] = int(config.get('PWM', PWM.DUTY_CYCLE))
+      RunConfig.pwm[PWM.FREQUENCY_LIST] \
+        = ast.literal_eval(config.get('PWM', PWM.FREQUENCY_LIST))
+      RunConfig.pwm[PWM.DUTY_CYCLE_LIST] \
+        = ast.literal_eval(config.get('PWM', PWM.DUTY_CYCLE_LIST))
+
       print(RunConfig.pinSol)
       print(RunConfig.pinMap)
       print(RunConfig.axisDelay)
       print(RunConfig.stepDirection)
+      print(RunConfig.pwm)
 
       RunConfig.__instance = self
+
+
+  def ModifyPWMFrequency(self, key):
+    freqList = RunConfig.pwm[PWM.FREQUENCY_LIST]
+    index = freqList.index(RunConfig.pwm[PWM.FREQUENCY])
+    if key is Key.up and index+1 < len(freqList):
+      RunConfig.pwm[PWM.FREQUENCY] = freqList[index+1]
+    elif key is Key.down and index > 0:
+      RunConfig.pwm[PWM.FREQUENCY] = freqList[index-1]
+
+
+  def ModifyPWMDutyCycle(self, key):
+    dcList = RunConfig.pwm[PWM.DUTY_CYCLE_LIST]
+    index = dcList.index(RunConfig.pwm[PWM.DUTY_CYCLE])
+    if key is Key.up and index+1 < len(dcList):
+      RunConfig.pwm[PWM.DUTY_CYCLE] = dcList[index+1]
+    elif key is Key.down and index > 0:
+      RunConfig.pwm[PWM.DUTY_CYCLE] = dcList[index-1]

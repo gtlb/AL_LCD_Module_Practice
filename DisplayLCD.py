@@ -1,5 +1,6 @@
 from Constants.Enums import PinMap as PIN
 from Models.RunConfig import RunConfig as RC
+from Constants.Enums import PwmConfig as PWM
 
 LCD_LEN = 4
 
@@ -11,7 +12,34 @@ def DisplayJogAxis(axis):
   displayTexts.append("JOG " + axis)
   displayTexts.append(" ")
   displayTexts.append("^ : Up Arrow")
-  displayTexts.append("v : Down Arrorw")
+  displayTexts.append("v : Down Arrow")
+
+  return displayTexts
+
+def DisplayPWM():
+  displayTexts = []
+  displayTexts.append("PWM ")
+  displayTexts.append(" ")
+  displayTexts.append(str(RunConfig.pwm[PWM.FREQUENCY]) + "Hz")
+  displayTexts.append(str(RunConfig.pwm[PWM.DUTY_CYCLE]) + "%")
+
+  return displayTexts
+
+def DisplayPWMFrequency():
+  displayTexts = []
+  displayTexts.append("PWM Frequency")
+  displayTexts.append(str(RunConfig.pwm[PWM.FREQUENCY]) + "Hz")
+  displayTexts.append("^ : Up Arrow")
+  displayTexts.append("v : Down Arrow")
+
+  return displayTexts
+
+def DisplayPWMDutyCycle():
+  displayTexts = []
+  displayTexts.append("PWM Duty Cycle")
+  displayTexts.append(str(RunConfig.pwm[PWM.DUTY_CYCLE]) + "%")
+  displayTexts.append("^ : Up Arrow")
+  displayTexts.append("v : Down Arrow")
 
   return displayTexts
 

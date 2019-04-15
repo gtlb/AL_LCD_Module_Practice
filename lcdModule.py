@@ -29,23 +29,34 @@ if __raspberry__ :
 def enum(**enums):
   return type('Enum', (), enums)
 
+RunConfig = RC.getInstance()
+
 arrowKeys = [Key.right, Key.left, Key.up, Key.down]
 
 DISPLAY = "DISPLAY"
 VALUE = "VALUE"
 JOG = "JOG"
+PWM = "PWM"
+PWM_FREQUENCY = "PWM Frequency"
+PWM_DUTY_CYCLE = "PWM Duty Cycle"
 SETTINGS = "SETTINGS"
 PINMAP = "PinMap"
 MODE = "MODE"
 LCD_LEN = 4
 
 STATE = enum(
-  MAIN        = "MAIN",
-  JOG         = "JOG",
-  JOG_AXIS    = "JOG_AXIS",
-  SETTINGS    = "SETTINGS",
-  PINMAP      = "PINMAP",
-  PINMAP_SINGLE = "PINMAP_SINGLE"
+  MAIN           = "MAIN",
+  JOG            = "JOG",
+  JOG_AXIS       = "JOG_AXIS",
+
+  SETTINGS       = "SETTINGS",
+  PWM_FREQUENCY  = "PWM_FREQUENCY",
+  PWM_DUTY_CYCLE = "PWM_DUTY_CYCLE",
+
+  PINMAP         = "PINMAP",
+  PINMAP_SINGLE  = "PINMAP_SINGLE",
+
+  PWM            = "PWM"
 )
 
 AXIS_NAME = enum(
@@ -58,10 +69,11 @@ AXIS_NAME = enum(
 
 stateMachine = {
   STATE.MAIN : {
-    DISPLAY   : [JOG, SETTINGS, "Main Item 3", "Main Item 4",
+    DISPLAY   : [JOG, PWM, SETTINGS, "Main Item 4",
                "Main Item 5", "Main Item 6"],
-    Key.right : [STATE.JOG, STATE.SETTINGS]
+    Key.right : [STATE.JOG, STATE.PWM, STATE.SETTINGS]
   },
+
   STATE.JOG : {
     DISPLAY   : [AXIS_NAME.X, AXIS_NAME.Y, AXIS_NAME.Z],
     VALUE     : [AXIS.X, AXIS.Y, AXIS.Z],
@@ -73,10 +85,25 @@ stateMachine = {
     Key.left  : STATE.JOG
   },
 
+  STATE.PWM : {
+    DISPLAY   : [],
+    Key.left  : STATE.MAIN
+  },
+
+  STATE.PWM_FREQUENCY : {
+    DISPLAY   : [],
+    Key.left  : STATE.SETTINGS
+  },
+
+  STATE.PWM_DUTY_CYCLE : {
+    DISPLAY   : [],
+    Key.left  : STATE.SETTINGS
+  },
+
   STATE.SETTINGS : {
-    DISPLAY   : [PINMAP],
+    DISPLAY   : [PINMAP, PWM_FREQUENCY, PWM_DUTY_CYCLE],
     Key.left  : STATE.MAIN,
-    Key.right : [STATE.PINMAP]
+    Key.right : [STATE.PINMAP, STATE.PWM_FREQUENCY, STATE.PWM_DUTY_CYCLE]
   },
   STATE.PINMAP : {
     DISPLAY   : [AXIS_NAME.X, AXIS_NAME.Y, AXIS_NAME.Z, IO.VALVE],
@@ -94,35 +121,50 @@ stateMachine = {
 
 currentState = STATE.MAIN
 cursorIndex = {
-  STATE.MAIN          : 0,
-  STATE.JOG           : 0,
-  STATE.JOG_AXIS      : 0,
+  STATE.MAIN           : 0,
 
-  STATE.SETTINGS      : 0,
-  STATE.PINMAP        : 0,
-  STATE.PINMAP_SINGLE : 0
+  STATE.JOG            : 0,
+  STATE.JOG_AXIS       : 0,
+
+  STATE.PWM            : 0,
+
+  STATE.SETTINGS       : 0,
+  STATE.PINMAP         : 0,
+  STATE.PINMAP_SINGLE  : 0,
+  STATE.PWM_FREQUENCY  : 0,
+  STATE.PWM_DUTY_CYCLE : 0
 }
 
 # This index shows from which index, the page should be displayed.
 pageDisplayIndex = {
-  STATE.MAIN          : 0,
-  STATE.JOG           : 0,
-  STATE.JOG_AXIS      : 0,
+  STATE.MAIN           : 0,
 
-  STATE.SETTINGS      : 0,
-  STATE.PINMAP        : 0,
-  STATE.PINMAP_SINGLE : 0
+  STATE.JOG            : 0,
+  STATE.JOG_AXIS       : 0,
+
+  STATE.PWM            : 0,
+
+  STATE.SETTINGS       : 0,
+  STATE.PINMAP         : 0,
+  STATE.PINMAP_SINGLE  : 0,
+  STATE.PWM_FREQUENCY  : 0,
+  STATE.PWM_DUTY_CYCLE : 0
 }
 
 # This setting defines how a page should be displayed and interacted.
 pageSettings = {
-  STATE.MAIN          : { MODE: PAGE_STYLE.NAVIGATION },
-  STATE.JOG           : { MODE: PAGE_STYLE.NAVIGATION },
-  STATE.JOG_AXIS      : { MODE: PAGE_STYLE.JOG },
+  STATE.MAIN           : { MODE: PAGE_STYLE.NAVIGATION },
 
-  STATE.SETTINGS      : { MODE: PAGE_STYLE.NAVIGATION },
-  STATE.PINMAP        : { MODE: PAGE_STYLE.NAVIGATION },
-  STATE.PINMAP_SINGLE : { MODE: PAGE_STYLE.EDIT }
+  STATE.JOG            : { MODE: PAGE_STYLE.NAVIGATION },
+  STATE.JOG_AXIS       : { MODE: PAGE_STYLE.JOG },
+
+  STATE.PWM            : { MODE: PAGE_STYLE.PWM },
+
+  STATE.SETTINGS       : { MODE: PAGE_STYLE.NAVIGATION },
+  STATE.PINMAP         : { MODE: PAGE_STYLE.NAVIGATION },
+  STATE.PINMAP_SINGLE  : { MODE: PAGE_STYLE.EDIT },
+  STATE.PWM_FREQUENCY  : { MODE: PAGE_STYLE.EDIT },
+  STATE.PWM_DUTY_CYCLE : { MODE: PAGE_STYLE.EDIT }
 }
 
 
@@ -166,6 +208,15 @@ def on_press(key):
 
       direction = DIR.PLUS if key is Key.up else DIR.MINUS
       Jog.StartJog(axis, direction)
+
+    if pageMode is PAGE_STYLE.EDIT:
+      if currentState is STATE.PWM_FREQUENCY:
+        RunConfig.ModifyPWMFrequency(key)
+      elif currentState is STATE.PWM_DUTY_CYCLE:
+        RunConfig.ModifyPWMDutyCycle(key)
+
+    if pageMode is PAGE_STYLE.PWM:
+      RunConfig.ModifyPWMDutyCycle(key)
 
 
 def on_release(key):
@@ -247,6 +298,16 @@ def DisplayLCD():
     jogIndex = cursorIndex[STATE.JOG] + pageDisplayIndex[STATE.JOG]
     axis = stateMachine[STATE.JOG][VALUE][jogIndex]
     displayTexts = LCD.DisplayJogAxis(axis)
+
+  elif currentState == STATE.PWM:
+    displayTexts = LCD.DisplayPWM()
+
+  elif currentState == STATE.PWM_FREQUENCY:
+    displayTexts = LCD.DisplayPWMFrequency()
+
+  elif currentState == STATE.PWM_DUTY_CYCLE:
+    displayTexts = LCD.DisplayPWMDutyCycle()
+
   elif currentState == STATE.PINMAP_SINGLE:
     pinIndex = cursorIndex[STATE.PINMAP] + pageDisplayIndex[STATE.PINMAP]
     pin = stateMachine[STATE.PINMAP][VALUE][pinIndex]
