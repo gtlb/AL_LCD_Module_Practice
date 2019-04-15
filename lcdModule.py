@@ -1,6 +1,7 @@
 import threading
 import time
 import Jog
+import PWMHandler
 import DisplayLCD as LCD
 import Utilities.FileHandler as FH
 from Models.RunConfig import RunConfig as RC
@@ -217,6 +218,17 @@ def on_press(key):
 
     if pageMode is PAGE_STYLE.PWM:
       RunConfig.ModifyPWMDutyCycle(key)
+      PWMHandler.UpdateDutyCycle()
+
+  if key is Key.left and Key.left in stateMachine[currentState].keys():
+    if currentState is STATE.PWM:
+      PWMHandler.StopPWM()
+
+  if key is Key.right and Key.right in stateMachine[currentState].keys():
+    absoluteIndex = pageDisplayIndex[currentState] + cursorIndex[currentState]
+    if absoluteIndex < len(stateMachine[currentState][key]):
+      if stateMachine[currentState][key][absoluteIndex] is STATE.PWM:
+        PWMHandler.StartPWM()
 
 
 def on_release(key):

@@ -30,6 +30,7 @@ PageStyle = enum(
 )
 
 PwmConfig = enum(
+  PWM_PIN = "PWMPin",
   FREQUENCY = "Frequency",
   DUTY_CYCLE = "DutyCycle",
   FREQUENCY_LIST = "FrequencyList",
