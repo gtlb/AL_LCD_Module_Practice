@@ -26,6 +26,8 @@ def SetIsRunPWM(value):
 
 def UpdateDutyCycle():
   if __raspberry__:
+    global pwmInst
+
     pwmInst.ChangeDutyCycle(RunConfig.pwm[PWM.DUTY_CYCLE])
 
 def StartPWM():
@@ -40,6 +42,9 @@ def StopPWM():
 def RunPWM():
   # Setup PWM
   if __raspberry__:
+    global pwmInst
+
+    GPIO.setup(RunConfig.pwm[PWM.PWM_PIN], GPIO.OUT, initial = GPIO.LOW)
     pwmInst = GPIO.PWM(RunConfig.pwm[PWM.PWM_PIN], RunConfig.pwm[PWM.FREQUENCY])
     pwmInst.start(RunConfig.pwm[PWM.DUTY_CYCLE])
 
@@ -48,10 +53,10 @@ def RunPWM():
       # PWM Cleanup
       if __raspberry__:
         pwmInst.stop()
-        GPIO.cleanUp()
+        GPIO.cleanup()
       break
 
-    print("PWM RUNNING")
+    print("PWM RUNNING " + str(RunConfig.pwm[PWM.DUTY_CYCLE]))
     # Run PWM
 
     time.sleep(1)
