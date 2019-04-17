@@ -1,3 +1,4 @@
+import Header as H
 import threading
 import time
 import Jog
@@ -12,10 +13,7 @@ from Constants.Enums import IO as IO
 from Constants.Enums import PageStyle as PAGE_STYLE
 from Constants.Enums import Direction as DIR
 
-__verbose__   = False
-__raspberry__ = False
-
-if __raspberry__ :
+if H.__raspberry__ :
   import RaspberrySetup as RS
   RS.Setup()
 
@@ -190,7 +188,7 @@ def StartKeyListener():
   keyListener.start()
 
 def on_press(key):
-  if __verbose__:
+  if H.__verbose__:
     print('{0} pressed'.format(key))
 
   pageMode = pageSettings[currentState][MODE]
@@ -204,7 +202,7 @@ def on_press(key):
 
       jogMesage = ", Plus" if key is Key.up else ", Minus"
 
-      if __verbose__:
+      if H.__verbose__:
         print("Jogging Axis " + str(axis) + jogMesage)
 
       direction = DIR.PLUS if key is Key.up else DIR.MINUS
@@ -233,7 +231,7 @@ def on_press(key):
 
 def on_release(key):
   global currentState
-  if __verbose__:
+  if H.__verbose__:
     print('{0} release'.format(key))
 
   pageMode = pageSettings[currentState][MODE]
@@ -244,7 +242,7 @@ def on_release(key):
       moveCursorUpDown(currentState, key)
 
     if pageMode is PAGE_STYLE.JOG:
-      if __verbose__:
+      if H.__verbose__:
         print("Stop Jogging")
 
       Jog.StopJog()
@@ -328,7 +326,7 @@ def DisplayLCD():
   else:
     displayTexts = LCD.DisplayEntries(displayList, pdi, ci, displayLen)
 
-  if __raspberry__ :
+  if H.__raspberry__ :
     for i in range(LCD_LEN):
       displayText = displayTexts[i]
       displayText = displayText + " " * (20 - len(displayText))

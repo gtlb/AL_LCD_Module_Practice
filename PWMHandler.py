@@ -1,13 +1,11 @@
+import Header as H
 import threading
 import time
 from threading import Lock
 from Models.RunConfig import RunConfig as RC
 from Constants.Enums import PwmConfig as PWM
 
-__verbose__ = False
-__raspberry__ = False
-
-if __raspberry__:
+if H.__raspberry__:
   import RPi.GPIO as GPIO
 
 RunConfig = RC.getInstance()
@@ -26,7 +24,7 @@ def SetIsRunPWM(value):
   isRunPWMLock.release()
 
 def UpdateDutyCycle():
-  if __raspberry__:
+  if H.__raspberry__:
     global pwmInst
 
     pwmInst.ChangeDutyCycle(RunConfig.pwm[PWM.DUTY_CYCLE])
@@ -42,7 +40,7 @@ def StopPWM():
 
 def RunPWM():
   # Setup PWM
-  if __raspberry__:
+  if H.__raspberry__:
     global pwmInst
     GPIO.setmode(GPIO.BOARD)
 
@@ -56,12 +54,12 @@ def RunPWM():
   while True:
     if not isRunPWM:
       # PWM Cleanup
-      if __raspberry__:
+      if H.__raspberry__:
         pwmInst.stop()
         GPIO.cleanup()
       break
 
-    if __verbose__:
+    if H.__verbose__:
       print("PWM RUNNING " + str(RunConfig.pwm[PWM.DUTY_CYCLE]))
 
     time.sleep(1)
