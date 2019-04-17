@@ -13,6 +13,9 @@ from Constants.Enums import IO as IO
 from Constants.Enums import PageStyle as PAGE_STYLE
 from Constants.Enums import Direction as DIR
 
+
+RTD = None
+
 if H.__raspberry__ :
   import RaspberrySetup as RS
   RS.Setup()
@@ -23,6 +26,15 @@ if H.__raspberry__ :
 
   port.write('$C\r'.encode())
   port.write('$B,0\r'.encode())
+
+  import board
+  import busio
+  import digitalio
+  import adafruit_max31865
+
+  spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
+  cs = digitalio.DigitalInOut(board.D5)
+  RTD = adafruit_max31865(spi, cs)
 
 
 def enum(**enums):
@@ -310,7 +322,7 @@ def DisplayLCD():
     displayTexts = LCD.DisplayJogAxis(axis)
 
   elif currentState == STATE.PWM:
-    displayTexts = LCD.DisplayPWM()
+    displayTexts = LCD.DisplayPWM(RTD)
 
   elif currentState == STATE.PWM_FREQUENCY:
     displayTexts = LCD.DisplayPWMFrequency()
@@ -334,14 +346,16 @@ def DisplayLCD():
       port.write(('$G,' + str(i%4+1) + ',1\r').encode())
       port.write(('$T,' + displayText + '\r').encode())
 
-  else:
+  if H.__verbose__ or not H.__raspberry__:
     print("--------------------")
     for i in range(LCD_LEN):
       print(displayTexts[i])
     print("--------------------")
 
-
 StartKeyListener()
 
 while(1):
   time.sleep(1)
+
+  if currentState == STATE.PWM:
+    DisplayLCD()

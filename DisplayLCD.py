@@ -1,3 +1,4 @@
+import Header as H
 from Constants.Enums import PinMap as PIN
 from Models.RunConfig import RunConfig as RC
 from Constants.Enums import PwmConfig as PWM
@@ -16,9 +17,10 @@ def DisplayJogAxis(axis):
 
   return displayTexts
 
-def DisplayPWM():
+def DisplayPWM(RTD):
   displayTexts = []
-  displayTexts.append("PWM ")
+  displayTexts.append("PWM "
+    + ("     {0:0.3f}C".format(sensor.temperature) if H.__raspberry__ else " "))
   displayTexts.append(" ")
   displayTexts.append(str(RunConfig.pwm[PWM.FREQUENCY]) + "Hz")
   displayTexts.append(str(RunConfig.pwm[PWM.DUTY_CYCLE]) + "%")
