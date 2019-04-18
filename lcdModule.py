@@ -13,7 +13,6 @@ from Constants.Enums import IO as IO
 from Constants.Enums import PageStyle as PAGE_STYLE
 from Constants.Enums import Direction as DIR
 
-
 RTD = None
 
 if H.__raspberry__ :
@@ -34,8 +33,7 @@ if H.__raspberry__ :
 
   spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
   cs = digitalio.DigitalInOut(board.D5)
-  RTD = adafruit_max31865(spi, cs)
-
+  RTD = adafruit_max31865.MAX31865(spi, cs)
 
 def enum(**enums):
   return type('Enum', (), enums)
@@ -354,8 +352,15 @@ def DisplayLCD():
 
 StartKeyListener()
 
-while(1):
-  time.sleep(1)
+try:
+  while(1):
+    time.sleep(1)
 
-  if currentState == STATE.PWM:
-    DisplayLCD()
+    if currentState == STATE.PWM:
+      DisplayLCD()
+except KeyboardInterrupt:
+  if H.__raspberry__ :
+    RS.cleanup()
+  print(" Programm terminated")
+  pass
+

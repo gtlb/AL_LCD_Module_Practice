@@ -13,7 +13,7 @@ def Setup():
   #############################
 
   #### GPIO Initial Setup ####
-  GPIO.setmode(GPIO.BOARD)
+  GPIO.setmode(GPIO.BCM)
 
   GPIO.setup(pinMap[AXIS.X][PIN.CLK], GPIO.OUT, initial = GPIO.LOW)
   GPIO.setup(pinMap[AXIS.X][PIN.DIR], GPIO.OUT, initial = GPIO.LOW)
@@ -29,3 +29,7 @@ def Setup():
 
   GPIO.setup(pinSol, GPIO.OUT, initial = GPIO.LOW)
   ############################
+
+def cleanup():
+  GPIO.cleanup()
+
