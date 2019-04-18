@@ -14,6 +14,7 @@ from Constants.Enums import PageStyle as PAGE_STYLE
 from Constants.Enums import Direction as DIR
 
 RTD = None
+RTDTemp = None
 
 if H.__raspberry__ :
   import RaspberrySetup as RS
@@ -236,7 +237,7 @@ def on_press(key):
     absoluteIndex = pageDisplayIndex[currentState] + cursorIndex[currentState]
     if absoluteIndex < len(stateMachine[currentState][key]):
       if stateMachine[currentState][key][absoluteIndex] is STATE.PWM:
-        PWMHandler.StartPWM()
+        PWMHandler.StartPWM(RTD)
 
 
 def on_release(key):
@@ -320,7 +321,7 @@ def DisplayLCD():
     displayTexts = LCD.DisplayJogAxis(axis)
 
   elif currentState == STATE.PWM:
-    displayTexts = LCD.DisplayPWM(RTD)
+    displayTexts = LCD.DisplayPWM(RTDTemp)
 
   elif currentState == STATE.PWM_FREQUENCY:
     displayTexts = LCD.DisplayPWMFrequency()
@@ -353,14 +354,16 @@ def DisplayLCD():
 StartKeyListener()
 
 try:
+  import datetime
   while(1):
     time.sleep(1)
+    RTDTemp = RTD.temperature
 
     if currentState == STATE.PWM:
       DisplayLCD()
 except KeyboardInterrupt:
   if H.__raspberry__ :
     RS.cleanup()
-  print(" Programm terminated")
+  print(" Program terminated")
   pass
 

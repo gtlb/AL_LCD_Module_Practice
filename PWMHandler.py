@@ -1,15 +1,24 @@
 import Header as H
+import datetime
 import threading
 import time
 from threading import Lock
 from Models.RunConfig import RunConfig as RC
 from Constants.Enums import PwmConfig as PWM
 
+RunConfig = RC.getInstance()
+
 if H.__raspberry__:
   import RPi.GPIO as GPIO
+  
+  GPIO.setmode(GPIO.BCM)
 
-RunConfig = RC.getInstance()
+  GPIO.setup(RunConfig.pwm[PWM.ON_OFF_PIN], GPIO.OUT, initial = GPIO.LOW)
+  GPIO.setup(RunConfig.pwm[PWM.PWM_PIN], GPIO.OUT, initial = GPIO.LOW)
+
+
 PWMThread = None
+RTD = None
 
 isRunPWM = False
 isRunPWMLock = Lock()
@@ -29,7 +38,14 @@ def UpdateDutyCycle():
 
     pwmInst.ChangeDutyCycle(RunConfig.pwm[PWM.DUTY_CYCLE])
 
-def StartPWM():
+def StartPWM(rtd):
+  global RTD
+  RTD = rtd
+
+  LogTempThread = threading.Thread(target = LogTemp)
+  LogTempThread.daemon = True
+  LogTempThread.start()
+
   PWMThread = threading.Thread(target = RunPWM)
   PWMThread.daemon = True
   SetIsRunPWM(True)
@@ -38,14 +54,21 @@ def StartPWM():
 def StopPWM():
   SetIsRunPWM(False)
 
+def LogTemp():
+  fo = open(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ".txt", "w")
+  while True:
+    if not isRunPWM:
+      fo.close()
+      break
+
+    fo.write(datetime.datetime.now().time().strftime('%Y-%m-%d %H:%M:%S:%f') + ": " + "{0:0.2f}C".format(RTD.temperature) + "\n")
+    
+    time.sleep(0.05)
+
 def RunPWM():
   # Setup PWM
   if H.__raspberry__:
     global pwmInst
-    GPIO.setmode(GPIO.BCM)
-
-    GPIO.setup(RunConfig.pwm[PWM.ON_OFF_PIN], GPIO.OUT, initial = GPIO.LOW)
-    GPIO.setup(RunConfig.pwm[PWM.PWM_PIN], GPIO.OUT, initial = GPIO.LOW)
 
     GPIO.output(RunConfig.pwm[PWM.ON_OFF_PIN], GPIO.HIGH)
     pwmInst = GPIO.PWM(RunConfig.pwm[PWM.PWM_PIN], RunConfig.pwm[PWM.FREQUENCY])
@@ -56,7 +79,6 @@ def RunPWM():
       # PWM Cleanup
       if H.__raspberry__:
         pwmInst.stop()
-        GPIO.cleanup()
       break
 
     if H.__verbose__:
