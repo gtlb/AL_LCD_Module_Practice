@@ -357,7 +357,6 @@ try:
   import datetime
   while(1):
     time.sleep(1)
-    RTDTemp = RTD.temperature
 
     if currentState == STATE.PWM:
       DisplayLCD()
@@ -366,4 +365,3 @@ except KeyboardInterrupt:
     RS.cleanup()
   print(" Program terminated")
   pass
-
