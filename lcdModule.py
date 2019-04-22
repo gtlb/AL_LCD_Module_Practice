@@ -321,7 +321,7 @@ def DisplayLCD():
     displayTexts = LCD.DisplayJogAxis(axis)
 
   elif currentState == STATE.PWM:
-    displayTexts = LCD.DisplayPWM(RTDTemp)
+    displayTexts = LCD.DisplayPWM(PWMHandler.GetRTDTemp())
 
   elif currentState == STATE.PWM_FREQUENCY:
     displayTexts = LCD.DisplayPWMFrequency()
@@ -357,9 +357,6 @@ try:
   import datetime
   while(1):
     time.sleep(1)
-
-    if H.__raspberry__:
-      RTDTemp = RTD.temperature
 
     if currentState == STATE.PWM:
       DisplayLCD()

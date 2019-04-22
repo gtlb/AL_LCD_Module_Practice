@@ -18,8 +18,10 @@ def DisplayJogAxis(axis):
   return displayTexts
 
 def DisplayPWM(RTDTemp):
+  temp = "N/A" if RTDTemp is None else "{0:0.2f}C".format(RTDTemp)
+
   displayTexts = []
-  displayTexts.append("PWM "+("     {0:0.2f}C".format(RTDTemp) if H.__raspberry__ else " "))
+  displayTexts.append("PWM      " + temp)
   displayTexts.append(" ")
   displayTexts.append(str(RunConfig.pwm[PWM.FREQUENCY]) + "Hz")
   displayTexts.append(str(RunConfig.pwm[PWM.DUTY_CYCLE]) + "%")

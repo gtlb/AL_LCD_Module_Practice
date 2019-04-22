@@ -23,6 +23,9 @@ RTD = None
 isRunPWM = False
 isRunPWMLock = Lock()
 
+RTDTemp = None
+RTDTempLock = Lock()
+
 pwmInst = None
 
 def SetIsRunPWM(value):
@@ -31,6 +34,22 @@ def SetIsRunPWM(value):
   isRunPWMLock.acquire()
   isRunPWM = value
   isRunPWMLock.release()
+
+def SetRTDTemp(value):
+  global RTDTemp, RTDTempLock
+
+  RTDTempLock.acquire()
+  RTDTemp = value
+  RTDTempLock.release()
+
+def GetRTDTemp():
+  global RTDTemp, RTDTempLock
+
+  RTDTempLock.acquire()
+  temp = RTDTemp
+  RTDTempLock.release()
+
+  return temp
 
 def UpdateDutyCycle():
   if H.__raspberry__:
@@ -42,21 +61,40 @@ def StartPWM(rtd):
   global RTD
   RTD = rtd
 
+  SetIsRunPWM(True)
+
+  tempThread = threading.Thread(target = RunTemp)
+  tempThread.daemon = True
+  tempThread.start()
+
   LogTempThread = threading.Thread(target = LogTemp)
   LogTempThread.daemon = True
   LogTempThread.start()
 
   PWMThread = threading.Thread(target = RunPWM)
   PWMThread.daemon = True
-  SetIsRunPWM(True)
   PWMThread.start()
 
 def StopPWM():
   SetIsRunPWM(False)
 
+def RunTemp():
+  while True:
+    if not isRunPWM:
+      break
+
+    if H.__raspberry__:
+      SetRTDTemp(RTD.temperature)
+
+    if H.__verbose__:
+      print("Temp. Measured")
+
+    time.sleep(0.2)
+
 def LogTemp():
   fo = open(str(RunConfig.pwm[PWM.DUTY_CYCLE]) + "_"
     + datetime.datetime.now().strftime('%Y-%m-%d %H.%M.%S') + ".txt", "w")
+
   while True:
     if not isRunPWM:
       fo.close()
@@ -65,12 +103,15 @@ def LogTemp():
     temp = "N/A"
     delay = 1
 
-    if H.__raspberry__:
-      temp = "{0:0.2f}C".format(RTD.temperature)
-      delay = 0.05
+    if H.__raspberry__ and RTDTemp is not None:
+      temp = "{0:0.2f}C".format(RTDTemp)
+      delay = 0.5
 
     fo.write(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S:%f')
       + ": " + temp + "\n")
+
+    if H.__verbose__:
+      print("File Write")
 
     time.sleep(delay)
 
