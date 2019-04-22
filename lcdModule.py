@@ -358,6 +358,9 @@ try:
   while(1):
     time.sleep(1)
 
+    if H.__raspberry__:
+      RTDTemp = RTD.temperature
+
     if currentState == STATE.PWM:
       DisplayLCD()
 except KeyboardInterrupt:

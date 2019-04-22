@@ -55,15 +55,24 @@ def StopPWM():
   SetIsRunPWM(False)
 
 def LogTemp():
-  fo = open(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ".txt", "w")
+  fo = open(str(RunConfig.pwm[PWM.DUTY_CYCLE]) + "_"
+    + datetime.datetime.now().strftime('%Y-%m-%d %H.%M.%S') + ".txt", "w")
   while True:
     if not isRunPWM:
       fo.close()
       break
 
-    fo.write(datetime.datetime.now().time().strftime('%Y-%m-%d %H:%M:%S:%f') + ": " + "{0:0.2f}C".format(RTD.temperature) + "\n")
+    temp = "N/A"
+    delay = 1
 
-    time.sleep(0.05)
+    if H.__raspberry__:
+      temp = "{0:0.2f}C".format(RTD.temperature)
+      delay = 0.05
+
+    fo.write(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S:%f')
+      + ": " + temp + "\n")
+
+    time.sleep(delay)
 
 def RunPWM():
   # Setup PWM
