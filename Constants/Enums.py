@@ -26,6 +26,7 @@ PageStyle = enum(
   NAVIGATION = "NAVIGATION",
   JOG = "JOG",
   PWM = "PWM",
+  PWM_SEQUENCE = "PWM_SEQUENCE",
   EDIT = "EDIT"
 )
 

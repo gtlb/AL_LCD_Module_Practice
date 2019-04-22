@@ -28,6 +28,19 @@ def DisplayPWM(RTDTemp):
 
   return displayTexts
 
+def DisplayPWMSequence(RTDTemp, pwmSequenceIndex):
+  temp = "N/A" if RTDTemp is None else "{0:0.2f}C".format(RTDTemp)
+  # TODO: Enum this
+  [targetTemp, targetDir, level] = RunConfig.pwmSequence["Sequence"][pwmSequenceIndex]
+
+  displayTexts = []
+  displayTexts.append("PWM Seq.  " + temp)
+  displayTexts.append(" ")
+  displayTexts.append("Target Temp: " + str(targetTemp) + ", Dir: " + str(targetDir))
+  displayTexts.append("PWM Level: " + str(level))
+
+  return displayTexts
+
 def DisplayPWMFrequency():
   displayTexts = []
   displayTexts.append("PWM Frequency")

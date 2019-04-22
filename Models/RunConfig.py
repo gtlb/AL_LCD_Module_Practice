@@ -1,5 +1,6 @@
 import ast
 import configparser
+import json
 import Constants.Constants as C
 from pynput.keyboard import Key
 from Constants.Enums import Axis as AXIS
@@ -15,6 +16,7 @@ class RunConfig:
   axisDelay = None
   stepDirection = None
   pwm = None
+  pwmSequence = None
 
   @staticmethod
   def getInstance():
@@ -73,11 +75,15 @@ class RunConfig:
       RunConfig.pwm[PWM.DUTY_CYCLE_LIST] \
         = ast.literal_eval(config.get('PWM', PWM.DUTY_CYCLE_LIST))
 
+      fp = open(C.PWM_SEQUENCE_FILEPATH)
+      RunConfig.pwmSequence = json.load(fp)
+
       print(RunConfig.pinSol)
       print(RunConfig.pinMap)
       print(RunConfig.axisDelay)
       print(RunConfig.stepDirection)
       print(RunConfig.pwm)
+      print(RunConfig.pwmSequence)
 
       RunConfig.__instance = self
 
