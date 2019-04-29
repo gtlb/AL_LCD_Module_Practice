@@ -41,6 +41,20 @@ def DisplayPWMSequence(RTDTemp, pwmSequenceIndex):
 
   return displayTexts
 
+def DisplayPWMMatrix(RTDTemp, PWMMatrixCurrentCondition):
+  temp = "N/A" if RTDTemp is None else "{0:0.2f}C".format(RTDTemp)
+  # TODO: Enum this
+  [observedTemp, observedSlope, level] = PWMMatrixCurrentCondition
+
+  displayTexts = []
+  displayTexts.append("PWM Mat.  " + temp)
+  displayTexts.append(" ")
+  displayTexts.append("Temp: " + str(observedTemp)
+                      + ", Slope: " + str(observedSlope))
+  displayTexts.append("PWM Level: " + str(level))
+
+  return displayTexts
+
 def DisplayPWMFrequency():
   displayTexts = []
   displayTexts.append("PWM Frequency")

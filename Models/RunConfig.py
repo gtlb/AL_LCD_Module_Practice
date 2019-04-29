@@ -17,6 +17,7 @@ class RunConfig:
   stepDirection = None
   pwm = None
   pwmSequence = None
+  pwmMatrix = None
 
   @staticmethod
   def getInstance():
@@ -78,12 +79,16 @@ class RunConfig:
       fp = open(C.PWM_SEQUENCE_FILEPATH)
       RunConfig.pwmSequence = json.load(fp)
 
+      fp = open(C.PWM_MATRIX_FILEPATH)
+      RunConfig.pwmMatrix = json.load(fp)
+
       print(RunConfig.pinSol)
       print(RunConfig.pinMap)
       print(RunConfig.axisDelay)
       print(RunConfig.stepDirection)
       print(RunConfig.pwm)
       print(RunConfig.pwmSequence)
+      print(RunConfig.pwmMatrix)
 
       RunConfig.__instance = self
 

@@ -48,6 +48,7 @@ VALUE = "VALUE"
 JOG = "JOG"
 PWM = "PWM"
 PWM_SEQUENCE = "PWM Sequence"
+PWM_MATRIX = "PWM Matrix"
 PWM_FREQUENCY = "PWM Frequency"
 PWM_DUTY_CYCLE = "PWM Duty Cycle"
 SETTINGS = "SETTINGS"
@@ -68,7 +69,8 @@ STATE = enum(
   PINMAP_SINGLE  = "PINMAP_SINGLE",
 
   PWM            = "PWM",
-  PWM_SEQUENCE   = "PWM_SEQUENCE"
+  PWM_SEQUENCE   = "PWM_SEQUENCE",
+  PWM_MATRIX   = "PWM_MATRIX"
 )
 
 AXIS_NAME = enum(
@@ -81,9 +83,10 @@ AXIS_NAME = enum(
 
 stateMachine = {
   STATE.MAIN : {
-    DISPLAY   : [JOG, PWM, PWM_SEQUENCE, SETTINGS, "Main Item 4",
-               "Main Item 5", "Main Item 6"],
-    Key.right : [STATE.JOG, STATE.PWM, STATE.PWM_SEQUENCE, STATE.SETTINGS]
+    DISPLAY   : [JOG, PWM, PWM_SEQUENCE, PWM_MATRIX, SETTINGS, "Main Item 4",
+                 "Main Item 5", "Main Item 6"],
+    Key.right : [STATE.JOG, STATE.PWM, STATE.PWM_SEQUENCE, STATE.PWM_MATRIX,
+                 STATE.SETTINGS]
   },
 
   STATE.JOG : {
@@ -103,6 +106,11 @@ stateMachine = {
   },
 
   STATE.PWM_SEQUENCE : {
+    DISPLAY   : [],
+    Key.left  : STATE.MAIN
+  },
+
+  STATE.PWM_MATRIX : {
     DISPLAY   : [],
     Key.left  : STATE.MAIN
   },
@@ -145,6 +153,7 @@ cursorIndex = {
 
   STATE.PWM            : 0,
   STATE.PWM_SEQUENCE   : 0,
+  STATE.PWM_MATRIX     : 0,
 
   STATE.SETTINGS       : 0,
   STATE.PINMAP         : 0,
@@ -162,6 +171,7 @@ pageDisplayIndex = {
 
   STATE.PWM            : 0,
   STATE.PWM_SEQUENCE   : 0,
+  STATE.PWM_MATRIX     : 0,
 
   STATE.SETTINGS       : 0,
   STATE.PINMAP         : 0,
@@ -179,6 +189,7 @@ pageSettings = {
 
   STATE.PWM            : { MODE: PAGE_STYLE.PWM },
   STATE.PWM_SEQUENCE   : { MODE: PAGE_STYLE.PWM_SEQUENCE },
+  STATE.PWM_MATRIX     : { MODE: PAGE_STYLE.PWM_MATRIX },
 
   STATE.SETTINGS       : { MODE: PAGE_STYLE.NAVIGATION },
   STATE.PINMAP         : { MODE: PAGE_STYLE.NAVIGATION },
@@ -250,6 +261,8 @@ def on_press(key):
         PWMHandler.StartPWM(RTD)
       elif stateMachine[currentState][key][absoluteIndex] is STATE.PWM_SEQUENCE:
         PWMHandler.StartPWMSequence(RTD)
+      elif stateMachine[currentState][key][absoluteIndex] is STATE.PWM_MATRIX:
+        PWMHandler.StartPWMMatrix(RTD)
 
 
 def on_release(key):
@@ -339,6 +352,10 @@ def DisplayLCD():
     displayTexts = LCD.DisplayPWMSequence(
                      PWMHandler.GetRTDTemp(), PWMHandler.GetPWMSequenceIndex())
 
+  elif currentState == STATE.PWM_MATRIX:
+    displayTexts = LCD.DisplayPWMMatrix(PWMHandler.GetRTDTemp(),
+                     PWMHandler.GetPwmMatrixCurrentCondition())
+
   elif currentState == STATE.PWM_FREQUENCY:
     displayTexts = LCD.DisplayPWMFrequency()
 
@@ -374,7 +391,9 @@ try:
   while(1):
     time.sleep(1)
 
-    if currentState == STATE.PWM or currentState == STATE.PWM_SEQUENCE:
+    if currentState == STATE.PWM             \
+       or currentState == STATE.PWM_SEQUENCE \
+       or currentState == STATE.PWM_MATRIX:
       DisplayLCD()
 except KeyboardInterrupt:
   if H.__raspberry__ :
