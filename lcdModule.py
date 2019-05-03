@@ -3,200 +3,124 @@ import threading
 import time
 import Jog
 import PWMHandler
+import Constants.Constants as C
 import DisplayLCD as LCD
 import Utilities.FileHandler as FH
 from Models.RunConfig import RunConfig as RC
 from threading import Lock
 from pynput.keyboard import Key, Listener, Controller
 from Constants.Enums import Axis as AXIS
-from Constants.Enums import IO as IO
+from Constants.Enums import IO
 from Constants.Enums import PageStyle as PAGE_STYLE
 from Constants.Enums import Direction as DIR
+from Constants.Enums import STATE
+
+DISPLAY = "DISPLAY"
+VALUE = "VALUE"
+MODE = "MODE"
 
 RTD = None
 RTDTemp = None
 
+RunConfig = RC.getInstance()
+
+currentState = STATE.MAIN
+
+# This code will only get executed for Raspberry Pi.
 if H.__raspberry__ :
   import RaspberrySetup as RS
+  import SubModules.RTDModule
+
   RS.Setup()
 
-  import serial
+  LCD.Setup()
 
-  port = serial.Serial("/dev/ttyS0", baudrate=9600, timeout=3.0)
-
-  port.write('$C\r'.encode())
-  port.write('$B,0\r'.encode())
-
-  import board
-  import busio
-  import digitalio
-  import adafruit_max31865
-
-  spi = busio.SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
-  cs = digitalio.DigitalInOut(board.D5)
-  RTD = adafruit_max31865.MAX31865(spi, cs)
+  RTD = RTDModule.Setup()
 
 def enum(**enums):
   return type('Enum', (), enums)
 
-RunConfig = RC.getInstance()
+states = [
+  STATE.MAIN,
+  STATE.JOG,
+  STATE.JOG_AXIS,
+  STATE.PWM,
+  STATE.PWM_SEQUENCE,
+  STATE.PWM_MATRIX,
+  STATE.SETTINGS,
+  STATE.PINMAP,
+  STATE.PINMAP_SINGLE,
+  STATE.PWM_FREQUENCY,
+  STATE.PWM_DUTY_CYCLE
+]
 
-arrowKeys = [Key.right, Key.left, Key.up, Key.down]
-
-DISPLAY = "DISPLAY"
-VALUE = "VALUE"
-JOG = "JOG"
-PWM = "PWM"
-PWM_SEQUENCE = "PWM Sequence"
-PWM_MATRIX = "PWM Matrix"
-PWM_FREQUENCY = "PWM Frequency"
-PWM_DUTY_CYCLE = "PWM Duty Cycle"
-SETTINGS = "SETTINGS"
-PINMAP = "PinMap"
-MODE = "MODE"
-LCD_LEN = 4
-
-STATE = enum(
-  MAIN           = "MAIN",
-  JOG            = "JOG",
-  JOG_AXIS       = "JOG_AXIS",
-
-  SETTINGS       = "SETTINGS",
-  PWM_FREQUENCY  = "PWM_FREQUENCY",
-  PWM_DUTY_CYCLE = "PWM_DUTY_CYCLE",
-
-  PINMAP         = "PINMAP",
-  PINMAP_SINGLE  = "PINMAP_SINGLE",
-
-  PWM            = "PWM",
-  PWM_SEQUENCE   = "PWM_SEQUENCE",
-  PWM_MATRIX   = "PWM_MATRIX"
-)
-
-AXIS_NAME = enum(
-  X = "X",
-  Y = "Y",
-  Z = "Z",
-  A = "A",
-  B = "B"
-)
-
-stateMachine = {
-  STATE.MAIN : {
-    DISPLAY   : [JOG, PWM, PWM_SEQUENCE, PWM_MATRIX, SETTINGS, "Main Item 4",
-                 "Main Item 5", "Main Item 6"],
-    Key.right : [STATE.JOG, STATE.PWM, STATE.PWM_SEQUENCE, STATE.PWM_MATRIX,
-                 STATE.SETTINGS]
-  },
-
-  STATE.JOG : {
-    DISPLAY   : [AXIS_NAME.X, AXIS_NAME.Y, AXIS_NAME.Z],
-    VALUE     : [AXIS.X, AXIS.Y, AXIS.Z],
-    Key.left  : STATE.MAIN,
-    Key.right : [STATE.JOG_AXIS, STATE.JOG_AXIS, STATE.JOG_AXIS]
-  },
-  STATE.JOG_AXIS : {
-    DISPLAY   : [],
-    Key.left  : STATE.JOG
-  },
-
-  STATE.PWM : {
-    DISPLAY   : [],
-    Key.left  : STATE.MAIN
-  },
-
-  STATE.PWM_SEQUENCE : {
-    DISPLAY   : [],
-    Key.left  : STATE.MAIN
-  },
-
-  STATE.PWM_MATRIX : {
-    DISPLAY   : [],
-    Key.left  : STATE.MAIN
-  },
-
-  STATE.PWM_FREQUENCY : {
-    DISPLAY   : [],
-    Key.left  : STATE.SETTINGS
-  },
-
-  STATE.PWM_DUTY_CYCLE : {
-    DISPLAY   : [],
-    Key.left  : STATE.SETTINGS
-  },
-
-  STATE.SETTINGS : {
-    DISPLAY   : [PINMAP, PWM_FREQUENCY, PWM_DUTY_CYCLE],
-    Key.left  : STATE.MAIN,
-    Key.right : [STATE.PINMAP, STATE.PWM_FREQUENCY, STATE.PWM_DUTY_CYCLE]
-  },
-  STATE.PINMAP : {
-    DISPLAY   : [AXIS_NAME.X, AXIS_NAME.Y, AXIS_NAME.Z, IO.VALVE],
-    VALUE     : [AXIS.X, AXIS.Y, AXIS.Z, IO.VALVE],
-    Key.left  : STATE.SETTINGS,
-    Key.right : [STATE.PINMAP_SINGLE, STATE.PINMAP_SINGLE, STATE.PINMAP_SINGLE,
-                 STATE.PINMAP_SINGLE]
-  },
-
-  STATE.PINMAP_SINGLE : {
-    DISPLAY  : [],
-    Key.left : STATE.PINMAP
-  }
-}
-
-currentState = STATE.MAIN
-cursorIndex = {
-  STATE.MAIN           : 0,
-
-  STATE.JOG            : 0,
-  STATE.JOG_AXIS       : 0,
-
-  STATE.PWM            : 0,
-  STATE.PWM_SEQUENCE   : 0,
-  STATE.PWM_MATRIX     : 0,
-
-  STATE.SETTINGS       : 0,
-  STATE.PINMAP         : 0,
-  STATE.PINMAP_SINGLE  : 0,
-  STATE.PWM_FREQUENCY  : 0,
-  STATE.PWM_DUTY_CYCLE : 0
-}
-
+# This data structure represents the state machine on how the program runs.
+stateMachine = {}
+# This index shows wich index in LCD the cursor should be displayed.
+cursorIndex = {}
 # This index shows from which index, the page should be displayed.
-pageDisplayIndex = {
-  STATE.MAIN           : 0,
-
-  STATE.JOG            : 0,
-  STATE.JOG_AXIS       : 0,
-
-  STATE.PWM            : 0,
-  STATE.PWM_SEQUENCE   : 0,
-  STATE.PWM_MATRIX     : 0,
-
-  STATE.SETTINGS       : 0,
-  STATE.PINMAP         : 0,
-  STATE.PINMAP_SINGLE  : 0,
-  STATE.PWM_FREQUENCY  : 0,
-  STATE.PWM_DUTY_CYCLE : 0
-}
-
+pageDisplayIndex = {}
 # This setting defines how a page should be displayed and interacted.
-pageSettings = {
-  STATE.MAIN           : { MODE: PAGE_STYLE.NAVIGATION },
+pageSettings = {}
 
-  STATE.JOG            : { MODE: PAGE_STYLE.NAVIGATION },
-  STATE.JOG_AXIS       : { MODE: PAGE_STYLE.JOG },
+for state in states:
+  cursorIndex[state] = 0
+  pageDisplayIndex[state] = 0
 
-  STATE.PWM            : { MODE: PAGE_STYLE.PWM },
-  STATE.PWM_SEQUENCE   : { MODE: PAGE_STYLE.PWM_SEQUENCE },
-  STATE.PWM_MATRIX     : { MODE: PAGE_STYLE.PWM_MATRIX },
-
-  STATE.SETTINGS       : { MODE: PAGE_STYLE.NAVIGATION },
-  STATE.PINMAP         : { MODE: PAGE_STYLE.NAVIGATION },
-  STATE.PINMAP_SINGLE  : { MODE: PAGE_STYLE.EDIT },
-  STATE.PWM_FREQUENCY  : { MODE: PAGE_STYLE.EDIT },
-  STATE.PWM_DUTY_CYCLE : { MODE: PAGE_STYLE.EDIT }
-}
+  if state is STATE.MAIN:
+    stateMachine[state] = {
+      DISPLAY   : [C.JOG, C.PWM, C.PWM_SEQUENCE, C.PWM_MATRIX, C.SETTINGS],
+      Key.right : [STATE.JOG, STATE.PWM, STATE.PWM_SEQUENCE, STATE.PWM_MATRIX,
+                   STATE.SETTINGS]
+    }
+    pageSettings[state] = { MODE: PAGE_STYLE.NAVIGATION }
+  elif state is STATE.JOG:
+    stateMachine[state] = {
+      DISPLAY   : [AXIS.X, AXIS.Y, AXIS.Z],
+      VALUE     : [AXIS.X, AXIS.Y, AXIS.Z],
+      Key.left  : STATE.MAIN,
+      Key.right : [STATE.JOG_AXIS, STATE.JOG_AXIS, STATE.JOG_AXIS]
+    }
+    pageSettings[state] = { MODE: PAGE_STYLE.NAVIGATION }
+  elif state is STATE.JOG_AXIS:
+    stateMachine[state] = { Key.left  : STATE.JOG }
+    pageSettings[state] = { MODE: PAGE_STYLE.JOG }
+  elif state is STATE.PWM:
+    stateMachine[state] = { Key.left  : STATE.MAIN }
+    pageSettings[state] = { MODE: PAGE_STYLE.PWM }
+  elif state is STATE.PWM_SEQUENCE:
+    stateMachine[state] = { Key.left  : STATE.MAIN }
+    pageSettings[state] = { MODE: PAGE_STYLE.PWM_SEQUENCE }
+  elif state is STATE.PWM_MATRIX:
+    stateMachine[state] = { Key.left  : STATE.MAIN }
+    pageSettings[state] = { MODE: PAGE_STYLE.PWM_MATRIX }
+  elif state is STATE.SETTINGS:
+    stateMachine[state] = {
+      DISPLAY   : [C.PINMAP, C.PWM_FREQUENCY, C.PWM_DUTY_CYCLE],
+      Key.left  : STATE.MAIN,
+      Key.right : [STATE.PINMAP, STATE.PWM_FREQUENCY, STATE.PWM_DUTY_CYCLE]
+    }
+    pageSettings[state] = { MODE: PAGE_STYLE.NAVIGATION }
+  elif state is STATE.PINMAP:
+    stateMachine[state] = {
+      DISPLAY   : [AXIS.X, AXIS.Y, AXIS.Z, IO.VALVE],
+      VALUE     : [AXIS.X, AXIS.Y, AXIS.Z, IO.VALVE],
+      Key.left  : STATE.SETTINGS,
+      Key.right : [STATE.PINMAP_SINGLE, STATE.PINMAP_SINGLE, STATE.PINMAP_SINGLE,
+                   STATE.PINMAP_SINGLE]
+    }
+    pageSettings[state] = { MODE: PAGE_STYLE.NAVIGATION }
+  elif state is STATE.PINMAP_SINGLE:
+    stateMachine[state] = { Key.left  : STATE.PINMAP }
+    pageSettings[state] = { MODE: PAGE_STYLE.EDIT }
+  elif state is STATE.PWM_FREQUENCY:
+    stateMachine[state] = { Key.left  : STATE.SETTINGS }
+    pageSettings[state] = { MODE: PAGE_STYLE.EDIT }
+  elif state is STATE.PWM_DUTY_CYCLE:
+    stateMachine[state] = { Key.left  : STATE.SETTINGS }
+    pageSettings[state] = { MODE: PAGE_STYLE.EDIT }
+  else:
+    raise Exception("Unsupported state has been encountered (State Machine).")
 
 
 stateMachineLen = len(stateMachine)
@@ -204,6 +128,7 @@ cursorIndexLen = len(cursorIndex)
 pageDisplayIndexLen = len(pageDisplayIndex)
 pageSettingsLen = len(pageSettings)
 
+# This check confirms all settings have been set properly until here.
 if (stateMachineLen != cursorIndexLen
     or cursorIndexLen != pageDisplayIndexLen
     or pageDisplayIndexLen != pageSettingsLen):
@@ -211,13 +136,9 @@ if (stateMachineLen != cursorIndexLen
   print("cursorIndex Len: " + str(len(cursorIndex)))
   print("pageDisplayIndex Len: " + str(len(pageDisplayIndex)))
   print("pageSettings Len: " + str(len(pageSettings)))
-  print("Some settings might be wrong. Please check your preset data structs.")
+  raise Exception("Some settings might be wrong."
+                + "Please check your preset data structs.")
 
-def StartKeyListener():
-  print("Key Listener Started")
-  keyListener = Listener(on_press=on_press, on_release=on_release)
-  keyListener.daemon = True
-  keyListener.start()
 
 def on_press(key):
   if H.__verbose__:
@@ -251,7 +172,7 @@ def on_press(key):
       PWMHandler.UpdateDutyCycle()
 
   if key is Key.left and Key.left in stateMachine[currentState].keys():
-    if currentState is STATE.PWM:
+    if currentState in [STATE.PWM, STATE.PWM_SEQUENCE, STATE.PWM_MATRIX]:
       PWMHandler.StopPWM()
 
   if key is Key.right and Key.right in stateMachine[currentState].keys():
@@ -306,7 +227,8 @@ def on_release(key):
 def moveCursorUpDown(state, direction):
   global cursorIndex, pageDisplayIndex
 
-  maxLength = len(stateMachine[state][DISPLAY])
+  maxLength = len(stateMachine[state][DISPLAY]) \
+              if DISPLAY in stateMachine[state] else 0
 
   if direction == Key.up:
     # You are at the top of the page, do nothing.
@@ -326,17 +248,15 @@ def moveCursorUpDown(state, direction):
       # do nothing
       pass
     # Your cursor is at the bottom, but not at the bottom of the page.
-    elif cursorIndex[state] == LCD_LEN-1:
+    elif cursorIndex[state] == C.LCD_LEN-1:
         pageDisplayIndex[state] += 1
     # Your cursor is not at the bottom.
     else:
       cursorIndex[state] += 1
 
 def DisplayLCD():
-  ci      = cursorIndex[currentState]
-  pdi     = pageDisplayIndex[currentState]
-  displayList = stateMachine[currentState][DISPLAY]
-  displayLen  = len(displayList)
+  state = stateMachine[currentState]
+  displayList = state[DISPLAY] if DISPLAY in state else []
   displayTexts = []
 
   # Get a list of strings to display.
@@ -349,8 +269,8 @@ def DisplayLCD():
     displayTexts = LCD.DisplayPWM(PWMHandler.GetRTDTemp())
 
   elif currentState == STATE.PWM_SEQUENCE:
-    displayTexts = LCD.DisplayPWMSequence(
-                     PWMHandler.GetRTDTemp(), PWMHandler.GetPWMSequenceIndex())
+    displayTexts = LCD.DisplayPWMSequence(PWMHandler.GetRTDTemp(),
+                     PWMHandler.GetPWMSequenceIndex())
 
   elif currentState == STATE.PWM_MATRIX:
     displayTexts = LCD.DisplayPWMMatrix(PWMHandler.GetRTDTemp(),
@@ -366,37 +286,39 @@ def DisplayLCD():
     pinIndex = cursorIndex[STATE.PINMAP] + pageDisplayIndex[STATE.PINMAP]
     pin = stateMachine[STATE.PINMAP][VALUE][pinIndex]
     displayTexts = LCD.DisplayPinMapSingle(pin)
+
   # This is the default case with multiple entries.
   else:
-    displayTexts = LCD.DisplayEntries(displayList, pdi, ci, displayLen)
+    ci = cursorIndex[currentState]
+    pdi = pageDisplayIndex[currentState]
+    displayTexts = LCD.DisplayEntries(displayList, pdi, ci)
 
   if H.__raspberry__ :
-    for i in range(LCD_LEN):
-      displayText = displayTexts[i]
-      displayText = displayText + " " * (20 - len(displayText))
-
-      port.write(('$G,' + str(i%4+1) + ',1\r').encode())
-      port.write(('$T,' + displayText + '\r').encode())
+    LCD.DisplayTexts(displayTexts)
 
   if H.__verbose__ or not H.__raspberry__:
     print("--------------------")
-    for i in range(LCD_LEN):
+    for i in range(C.LCD_LEN):
       print(displayTexts[i])
     print("--------------------")
 
-StartKeyListener()
+
+if H.__verbose__:
+  print("Key Listener Started")
+
+keyListener = Listener(on_press=on_press, on_release=on_release)
+keyListener.daemon = True
+keyListener.start()
 
 try:
   import datetime
   while(1):
-    time.sleep(1)
-
-    if currentState == STATE.PWM             \
-       or currentState == STATE.PWM_SEQUENCE \
-       or currentState == STATE.PWM_MATRIX:
+    if currentState in [STATE.PWM, STATE.PWM_SEQUENCE, STATE.PWM_MATRIX]:
       DisplayLCD()
+
+    time.sleep(1)
 except KeyboardInterrupt:
   if H.__raspberry__ :
     RS.cleanup()
-  print(" Program terminated")
+  print("Program terminated")
   pass

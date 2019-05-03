@@ -39,3 +39,20 @@ PwmConfig = enum(
   FREQUENCY_LIST = "FrequencyList",
   DUTY_CYCLE_LIST = "DutyCycleList"
 )
+
+STATE = enum(
+  MAIN           = "MAIN",
+  JOG            = "JOG",
+  JOG_AXIS       = "JOG_AXIS",
+
+  SETTINGS       = "SETTINGS",
+  PWM_FREQUENCY  = "PWM_FREQUENCY",
+  PWM_DUTY_CYCLE = "PWM_DUTY_CYCLE",
+
+  PINMAP         = "PINMAP",
+  PINMAP_SINGLE  = "PINMAP_SINGLE",
+
+  PWM            = "PWM",
+  PWM_SEQUENCE   = "PWM_SEQUENCE",
+  PWM_MATRIX     = "PWM_MATRIX"
+)

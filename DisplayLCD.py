@@ -1,104 +1,119 @@
 import Header as H
+import Constants.Constants as C
 from Constants.Enums import PinMap as PIN
 from Models.RunConfig import RunConfig as RC
 from Constants.Enums import PwmConfig as PWM
 
-LCD_LEN = 4
-
 RunConfig = RC.getInstance()
 pinMap = RunConfig.pinMap
 
-def DisplayJogAxis(axis):
-  displayTexts = []
-  displayTexts.append("JOG " + axis)
-  displayTexts.append(" ")
-  displayTexts.append("^ : Up Arrow")
-  displayTexts.append("v : Down Arrow")
+port = None
 
-  return displayTexts
+#### Main Funcitons ############################################################
+
+# Setup LCD Module
+def Setup():
+  import serial
+
+  # Initialize the serial IO, clear the screen, and turn the blinker off.
+  port = serial.Serial("/dev/ttyS0", baudrate=9600, timeout=3.0)
+  port.write('$C\r'.encode())
+  port.write('$B,0\r'.encode())
+
+# Display Text to the Raspberry Pi LCD Screen.
+def DisplayTexts(displayTexts):
+  for i in range(C.LCD_LEN):
+    displayText = displayTexts[i] + " " * (20 - len(displayText))
+
+    port.write(('$G,{},1\r'.format(str(i%4+1))).encode())
+    port.write(('$T,{}\r'.format(displayText)).encode())
+
+################################################################################
+
+#### Helper Functions ##########################################################
+
+def FormatTemp(temp):
+  return "N/A" if temp is None else "{0:0.2f}C".format(temp)
+
+################################################################################
+
+def DisplayJogAxis(axis):
+  return [
+    "JOG {}".format(axis),
+    " ",
+    "^ : Up Arrow",
+    "v : Down Arrow"
+  ]
+
+#### Display Functions #########################################################
 
 def DisplayPWM(RTDTemp):
-  temp = "N/A" if RTDTemp is None else "{0:0.2f}C".format(RTDTemp)
-
-  displayTexts = []
-  displayTexts.append("PWM      " + temp)
-  displayTexts.append(" ")
-  displayTexts.append(str(RunConfig.pwm[PWM.FREQUENCY]) + "Hz")
-  displayTexts.append(str(RunConfig.pwm[PWM.DUTY_CYCLE]) + "%")
-
-  return displayTexts
+  return [
+    "PWM      {}".format(FormatTemp(RTDTemp)),
+    " ",
+    "{} Hz".format(RunConfig.pwm[PWM.FREQUENCY]),
+    "{} %".format(RunConfig.pwm[PWM.DUTY_CYCLE])
+  ]
 
 def DisplayPWMSequence(RTDTemp, pwmSequenceIndex):
-  temp = "N/A" if RTDTemp is None else "{0:0.2f}C".format(RTDTemp)
   # TODO: Enum this
   [targetTemp, targetDir, level] = RunConfig.pwmSequence["Sequence"][pwmSequenceIndex]
 
-  displayTexts = []
-  displayTexts.append("PWM Seq.  " + temp)
-  displayTexts.append(" ")
-  displayTexts.append("Target Temp: " + str(targetTemp) + ", Dir: " + str(targetDir))
-  displayTexts.append("PWM Level: " + str(level))
-
-  return displayTexts
+  return [
+    "PWM Seq.  {}".format(FormatTemp(RTDTemp)),
+    " ",
+    "Target Temp: {}, Dir: {}".format(targetTemp, targetDir),
+    "PWM Level: {}".format(level)
+  ]
 
 def DisplayPWMMatrix(RTDTemp, PWMMatrixCurrentCondition):
-  temp = "N/A" if RTDTemp is None else "{0:0.2f}C".format(RTDTemp)
-  # TODO: Enum this
   [observedTemp, observedSlope, level] = PWMMatrixCurrentCondition
 
-  displayTexts = []
-  displayTexts.append("PWM Mat.  " + temp)
-  displayTexts.append(" ")
-  displayTexts.append("Temp: " + str(observedTemp)
-                      + ", Slope: " + str(observedSlope))
-  displayTexts.append("PWM Level: " + str(level))
-
-  return displayTexts
+  return [
+    "PWM Mat.  {}".format(FormatTemp(RTDTemp)),
+    " ",
+    "Temp: {}, Slope: {}".format(observedTemp, observedSlope),
+    "PWM Level: {}".format(level)
+  ]
 
 def DisplayPWMFrequency():
-  displayTexts = []
-  displayTexts.append("PWM Frequency")
-  displayTexts.append(str(RunConfig.pwm[PWM.FREQUENCY]) + "Hz")
-  displayTexts.append("^ : Up Arrow")
-  displayTexts.append("v : Down Arrow")
-
-  return displayTexts
+  return [
+    "PWM Frequency",
+    "{} Hz".format(RunConfig.pwm[PWM.FREQUENCY]),
+    "^ : Up Arrow",
+    "v : Down Arrow"
+  ]
 
 def DisplayPWMDutyCycle():
-  displayTexts = []
-  displayTexts.append("PWM Duty Cycle")
-  displayTexts.append(str(RunConfig.pwm[PWM.DUTY_CYCLE]) + "%")
-  displayTexts.append("^ : Up Arrow")
-  displayTexts.append("v : Down Arrow")
-
-  return displayTexts
+  return [
+    "PWM Duty Cycle",
+    "{} %".format(RunConfig.pwm[PWM.DUTY_CYCLE]),
+    "^ : Up Arrow",
+    "v : Down Arrow"
+  ]
 
 def DisplayPinMapSingle(pin):
-  displayTexts = []
-
-  displayTexts.append("PIN " + pin)
+  displayTexts = ["PIN {}".format(pin), " ", " ", " "]
 
   if pin in pinMap.keys():
-    displayTexts.append(PIN.CLK + ": " + str(pinMap[pin][PIN.CLK]))
-    displayTexts.append(PIN.DIR + ": " + str(pinMap[pin][PIN.DIR]))
-    displayTexts.append(PIN.ENA + ": " + str(pinMap[pin][PIN.ENA]))
-  else:
-    displayTexts.append(" ")
-    displayTexts.append(" ")
-    displayTexts.append(" ")
+    displayTexts[1] = "{}: {}".format(PIN.CLK, pinMap[pin][PIN.CLK])
+    displayTexts[2] = "{}: {}".format(PIN.DIR, pinMap[pin][PIN.DIR])
+    displayTexts[3] = "{}: {}".format(PIN.ENA, pinMap[pin][PIN.ENA])
 
   return displayTexts
 
-def DisplayEntries(displayList, pdi, ci, totalEntryNum):
+def DisplayEntries(displayList, pdi, ci):
   displayTexts = []
 
-  for i in range(LCD_LEN):
-    if pdi + i < totalEntryNum:
+  for i in range(C.LCD_LEN):
+    if pdi + i < len(displayList):
       if i == ci:
-        displayTexts.append("> " + displayList[pdi + i])
+        displayTexts.append("> {}".format(displayList[pdi + i]))
       else:
-        displayTexts.append("  " + displayList[pdi + i])
+        displayTexts.append("  {}".format(displayList[pdi + i]))
     else:
       displayTexts.append("  ")
 
   return displayTexts
+
+################################################################################
