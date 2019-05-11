@@ -291,7 +291,7 @@ def RunPWMMatrix():
   lastThreeData = [(0.0, 0), (0.0, 0), (0.0, 0)]
 
   # TODO: Move to below
-  temp = 150.0
+  temp = 0.0
   timestamp = 0
   lastPWMOutputIndex = -1
   while True:
