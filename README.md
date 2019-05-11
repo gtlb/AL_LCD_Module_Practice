@@ -26,8 +26,7 @@ Configurations allow users to configure necessary settings for the LCD Module.
 1. Motor related configs: pinmap, motor step delays, ...
 2. PWM related configs: duty cycle, frequency, ...
 
-`PWMSequence.json` specifices a sequence of  
-(target temperature, coming direction, pwm level) triplets to run the
+`PWMSequence.json` specifices a sequence of (target temperature, coming direction, pwm level) triplets to run the
 induction module with a desired PWM sequence.
 
 `PWMMatrix.json` specifies a map of how the induction module should act
