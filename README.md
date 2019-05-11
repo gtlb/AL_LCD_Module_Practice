@@ -16,17 +16,17 @@ The program is divided into
 Core Logic contains all logic involving setting up motors and IOs,
 triggering LCD displays, and sending signals to the induction module.
 
-Sub Modules are responsible for runinng logic for specific purposes.
-`DisplayModule.py` handles sending signal to LCD display.
-`JogModule.py` handles sending step signals to motor drivers.
-`PWMModule.py` handles sending signals to Induction PWM drivers.
+Sub Modules are responsible for runinng logic for specific purposes.  
+`DisplayModule.py` handles sending signal to LCD display.  
+`JogModule.py` handles sending step signals to motor drivers.  
+`PWMModule.py` handles sending signals to Induction PWM drivers.  
 
-Configurations allow users to configure necessary settings for the LCD Module.
+Configurations allow users to configure necessary settings for the LCD Module.  
 `Config.ini` inclues,
 1. Motor related configs: pinmap, motor step delays, ...
 2. PWM related configs: duty cycle, frequency, ...
 
-`PWMSequence.json` specifices a sequence of
+`PWMSequence.json` specifices a sequence of  
 (target temperature, coming direction, pwm level) triplets to run the
 induction module with a desired PWM sequence.
 
