@@ -5,8 +5,6 @@ from Models.RunConfig import RunConfig as RC
 from Constants.Enums import PwmConfig as PWM
 
 RunConfig = RC.getInstance()
-pinMap = RunConfig.pinMap
-
 port = None
 
 #### Main Funcitons ############################################################
@@ -93,6 +91,7 @@ def DisplayPWMDutyCycle():
   ]
 
 def DisplayPinMapSingle(pin):
+  pinMap = RunConfig.pinMap
   displayTexts = ["PIN {}".format(pin), " ", " ", " "]
 
   if pin in pinMap.keys():

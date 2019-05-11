@@ -1,10 +1,10 @@
 import Header as H
 import threading
 import time
-import Jog
-import PWMHandler
 import Constants.Constants as C
-import DisplayLCD as LCD
+import SubModules.DisplayModule as DisplayModule
+import SubModules.JogModule as JogModule
+import SubModules.PWMModule as PWMModule
 import Utilities.FileHandler as FH
 from Models.RunConfig import RunConfig as RC
 from threading import Lock
@@ -28,13 +28,11 @@ currentState = STATE.MAIN
 
 # This code will only get executed for Raspberry Pi.
 if H.__raspberry__ :
-  import RaspberrySetup as RS
+  import SubModules.RaspberryModule
   import SubModules.RTDModule
 
-  RS.Setup()
-
-  LCD.Setup()
-
+  RaspberryModule.Setup()
+  DisplayModule.Setup()
   RTD = RTDModule.Setup()
 
 def enum(**enums):
@@ -132,10 +130,10 @@ pageSettingsLen = len(pageSettings)
 if (stateMachineLen != cursorIndexLen
     or cursorIndexLen != pageDisplayIndexLen
     or pageDisplayIndexLen != pageSettingsLen):
-  print("stateMachine Len: " + str(len(stateMachine)))
-  print("cursorIndex Len: " + str(len(cursorIndex)))
-  print("pageDisplayIndex Len: " + str(len(pageDisplayIndex)))
-  print("pageSettings Len: " + str(len(pageSettings)))
+  print("stateMachine Len: {}".format(stateMachine))
+  print("cursorIndex Len: {}".format(cursorIndex))
+  print("pageDisplayIndex Len: {}".format(pageDisplayIndex))
+  print("pageSettings Len: {}".format(pageSettings))
   raise Exception("Some settings might be wrong."
                 + "Please check your preset data structs.")
 
@@ -153,13 +151,12 @@ def on_press(key):
       jogIndex = cursorIndex[STATE.JOG] + pageDisplayIndex[STATE.JOG]
       axis = stateMachine[STATE.JOG][VALUE][jogIndex]
 
-      jogMesage = ", Plus" if key is Key.up else ", Minus"
-
       if H.__verbose__:
-        print("Jogging Axis " + str(axis) + jogMesage)
+        jogMesage = ", Plus" if key is Key.up else ", Minus"
+        print("Jogging Axis {}{}".format(axis, jogMesage))
 
       direction = DIR.PLUS if key is Key.up else DIR.MINUS
-      Jog.StartJog(axis, direction)
+      JogModule.StartJog(axis, direction)
 
     if pageMode is PAGE_STYLE.EDIT:
       if currentState is STATE.PWM_FREQUENCY:
@@ -169,25 +166,26 @@ def on_press(key):
 
     if pageMode is PAGE_STYLE.PWM:
       RunConfig.ModifyPWMDutyCycle(key)
-      PWMHandler.UpdateDutyCycle()
+      PWMModule.UpdateDutyCycle()
 
   if key is Key.left and Key.left in stateMachine[currentState].keys():
     if currentState in [STATE.PWM, STATE.PWM_SEQUENCE, STATE.PWM_MATRIX]:
-      PWMHandler.StopPWM()
+      PWMModule.StopPWM()
 
   if key is Key.right and Key.right in stateMachine[currentState].keys():
     absoluteIndex = pageDisplayIndex[currentState] + cursorIndex[currentState]
     if absoluteIndex < len(stateMachine[currentState][key]):
       if stateMachine[currentState][key][absoluteIndex] is STATE.PWM:
-        PWMHandler.StartPWM(RTD)
+        PWMModule.StartPWM(RTD)
       elif stateMachine[currentState][key][absoluteIndex] is STATE.PWM_SEQUENCE:
-        PWMHandler.StartPWMSequence(RTD)
+        PWMModule.StartPWMSequence(RTD)
       elif stateMachine[currentState][key][absoluteIndex] is STATE.PWM_MATRIX:
-        PWMHandler.StartPWMMatrix(RTD)
+        PWMModule.StartPWMMatrix(RTD)
 
 
 def on_release(key):
   global currentState
+
   if H.__verbose__:
     print('{0} release'.format(key))
 
@@ -202,7 +200,7 @@ def on_release(key):
       if H.__verbose__:
         print("Stop Jogging")
 
-      Jog.StopJog()
+      JogModule.StopJog()
 
     if pageMode is PAGE_STYLE.EDIT:
       # TODO: Not yet implemented. Up and down change values.
@@ -217,10 +215,6 @@ def on_release(key):
 
     if absoluteIndex < len(stateMachine[currentState][key]):
       currentState = stateMachine[currentState][key][absoluteIndex]
-
-  if key == Key.esc:
-    # Stop listener
-    return False
 
   DisplayLCD()
 
@@ -263,38 +257,38 @@ def DisplayLCD():
   if currentState == STATE.JOG_AXIS:
     jogIndex = cursorIndex[STATE.JOG] + pageDisplayIndex[STATE.JOG]
     axis = stateMachine[STATE.JOG][VALUE][jogIndex]
-    displayTexts = LCD.DisplayJogAxis(axis)
+    displayTexts = DisplayModule.DisplayJogAxis(axis)
 
   elif currentState == STATE.PWM:
-    displayTexts = LCD.DisplayPWM(PWMHandler.GetRTDTemp())
+    displayTexts = DisplayModule.DisplayPWM(PWMModule.GetRTDTemp())
 
   elif currentState == STATE.PWM_SEQUENCE:
-    displayTexts = LCD.DisplayPWMSequence(PWMHandler.GetRTDTemp(),
-                     PWMHandler.GetPWMSequenceIndex())
+    displayTexts = DisplayModule.DisplayPWMSequence(PWMModule.GetRTDTemp(),
+                     PWMModule.GetPWMSequenceIndex())
 
   elif currentState == STATE.PWM_MATRIX:
-    displayTexts = LCD.DisplayPWMMatrix(PWMHandler.GetRTDTemp(),
-                     PWMHandler.GetPwmMatrixCurrentCondition())
+    displayTexts = DisplayModule.DisplayPWMMatrix(PWMModule.GetRTDTemp(),
+                     PWMModule.GetPwmMatrixCurrentCondition())
 
   elif currentState == STATE.PWM_FREQUENCY:
-    displayTexts = LCD.DisplayPWMFrequency()
+    displayTexts = DisplayModule.DisplayPWMFrequency()
 
   elif currentState == STATE.PWM_DUTY_CYCLE:
-    displayTexts = LCD.DisplayPWMDutyCycle()
+    displayTexts = DisplayModule.DisplayPWMDutyCycle()
 
   elif currentState == STATE.PINMAP_SINGLE:
     pinIndex = cursorIndex[STATE.PINMAP] + pageDisplayIndex[STATE.PINMAP]
     pin = stateMachine[STATE.PINMAP][VALUE][pinIndex]
-    displayTexts = LCD.DisplayPinMapSingle(pin)
+    displayTexts = DisplayModule.DisplayPinMapSingle(pin)
 
   # This is the default case with multiple entries.
   else:
     ci = cursorIndex[currentState]
     pdi = pageDisplayIndex[currentState]
-    displayTexts = LCD.DisplayEntries(displayList, pdi, ci)
+    displayTexts = DisplayModule.DisplayEntries(displayList, pdi, ci)
 
   if H.__raspberry__ :
-    LCD.DisplayTexts(displayTexts)
+    DisplayModule.DisplayTexts(displayTexts)
 
   if H.__verbose__ or not H.__raspberry__:
     print("--------------------")
@@ -303,15 +297,15 @@ def DisplayLCD():
     print("--------------------")
 
 
-if H.__verbose__:
-  print("Key Listener Started")
-
+# Start key listener. Use `on_press` and `on_release` as button press handlers.
 keyListener = Listener(on_press=on_press, on_release=on_release)
 keyListener.daemon = True
 keyListener.start()
 
+if H.__verbose__:
+  print("Key Listener Started")
+
 try:
-  import datetime
   while(1):
     if currentState in [STATE.PWM, STATE.PWM_SEQUENCE, STATE.PWM_MATRIX]:
       DisplayLCD()

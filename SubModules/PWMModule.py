@@ -322,7 +322,6 @@ def RunPWMMatrix():
       print(lastThreeData)
       print("Slope: " + str(slope))
 
-    # DONE UP TO HERE!!!!!!!!!!!
     [pwmOutputIndex, condition] = FindPWMOutputIndex(temp, slope)
 
     SetPWMMaxtrixCondition(condition)
