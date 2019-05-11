@@ -13,6 +13,8 @@ port = None
 def Setup():
   import serial
 
+  global port
+
   # Initialize the serial IO, clear the screen, and turn the blinker off.
   port = serial.Serial("/dev/ttyS0", baudrate=9600, timeout=3.0)
   port.write('$C\r'.encode())
@@ -21,7 +23,7 @@ def Setup():
 # Display Text to the Raspberry Pi LCD Screen.
 def DisplayTexts(displayTexts):
   for i in range(C.LCD_LEN):
-    displayText = displayTexts[i] + " " * (20 - len(displayText))
+    displayText = displayTexts[i] + " " * (20 - len(displayTexts[i]))
 
     port.write(('$G,{},1\r'.format(str(i%4+1))).encode())
     port.write(('$T,{}\r'.format(displayText)).encode())
@@ -60,7 +62,7 @@ def DisplayPWMSequence(RTDTemp, pwmSequenceIndex):
   return [
     "PWM Seq.  {}".format(FormatTemp(RTDTemp)),
     " ",
-    "Target Temp: {}, Dir: {}".format(targetTemp, targetDir),
+    "Temp.: {}, Dir: {}".format(targetTemp, targetDir),
     "PWM Level: {}".format(level)
   ]
 

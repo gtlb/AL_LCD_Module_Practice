@@ -28,8 +28,8 @@ currentState = STATE.MAIN
 
 # This code will only get executed for Raspberry Pi.
 if H.__raspberry__ :
-  import SubModules.RaspberryModule
-  import SubModules.RTDModule
+  import SubModules.RaspberryModule as RaspberryModule
+  import SubModules.RTDModule as RTDModule
 
   RaspberryModule.Setup()
   DisplayModule.Setup()

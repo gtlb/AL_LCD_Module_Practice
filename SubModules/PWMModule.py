@@ -210,7 +210,7 @@ def RunPWM():
         pwmInst.stop()
       break
 
-    if H.__raspberry__:
+    if H.__raspberry__ and RTDTemp is not None:
       temp = float("{0:0.2f}".format(RTDTemp))
 
       if temp > TARGET_TEMP_HIGH:
@@ -304,9 +304,7 @@ def RunPWMMatrix():
     if not H.__raspberry__:
       temp += lastPWMOutputIndex - 0.5
 
-    print(temp)
-
-    if H.__raspberry__:
+    if H.__raspberry__ and RTDTemp is not None:
       temp = float("{0:0.2f}".format(RTDTemp))
 
     timestamp = time.time()
