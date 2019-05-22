@@ -2,6 +2,7 @@ import ast
 import configparser
 import json
 import Constants.Constants as C
+from os import listdir
 from pynput.keyboard import Key
 from Constants.Enums import Axis as AXIS
 from Constants.Enums import Direction as DIR
@@ -18,6 +19,7 @@ class RunConfig:
   pwm = None
   pwmSequence = None
   pwmMatrix = None
+  runSequencesTitles = None
 
   @staticmethod
   def getInstance():
@@ -82,6 +84,8 @@ class RunConfig:
       fp = open(C.PWM_MATRIX_FILEPATH)
       RunConfig.pwmMatrix = json.load(fp)
 
+      RunConfig.runSequencesTitles = listdir(C.RUN_SEQUENCES_FILEPATH)
+
       print(RunConfig.pinSol)
       print(RunConfig.pinMap)
       print(RunConfig.axisDelay)
@@ -89,6 +93,7 @@ class RunConfig:
       print(RunConfig.pwm)
       print(RunConfig.pwmSequence)
       print(RunConfig.pwmMatrix)
+      print(RunConfig.runSequencesTitles)
 
       RunConfig.__instance = self
 

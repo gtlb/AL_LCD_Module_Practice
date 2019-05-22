@@ -1,9 +1,16 @@
 CONFIG_FILEPATH = "./Config/Config.ini"
+RUN_SEQUENCES_FILEPATH = "./RunSequences/"
 PWM_SEQUENCE_FILEPATH = "Config/PWMSequence.json"
 PWM_MATRIX_FILEPATH = "Config/PWMMatrix.json"
 
+RUN = "RUN"
 JOG = "JOG"
 PWM = "PWM"
+
+DISPLAY = "DISPLAY"
+VALUE = "VALUE"
+MODE = "MODE"
+RIGHT_ALWAYS = "RIGHT ALWAYS"
 
 PWM_SEQUENCE = "PWM Sequence"
 PWM_MATRIX = "PWM Matrix"

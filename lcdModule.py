@@ -14,10 +14,8 @@ from Constants.Enums import IO
 from Constants.Enums import PageStyle as PAGE_STYLE
 from Constants.Enums import Direction as DIR
 from Constants.Enums import STATE
+from Constants.Constants import DISPLAY, VALUE, MODE, RIGHT_ALWAYS
 
-DISPLAY = "DISPLAY"
-VALUE = "VALUE"
-MODE = "MODE"
 
 RTD = None
 RTDTemp = None
@@ -42,6 +40,8 @@ states = [
   STATE.MAIN,
   STATE.JOG,
   STATE.JOG_AXIS,
+  STATE.RUN,
+  STATE.RUN_SEQUENCE,
   STATE.PWM,
   STATE.PWM_SEQUENCE,
   STATE.PWM_MATRIX,
@@ -67,11 +67,21 @@ for state in states:
 
   if state is STATE.MAIN:
     stateMachine[state] = {
-      DISPLAY   : [C.JOG, C.PWM, C.PWM_SEQUENCE, C.PWM_MATRIX, C.SETTINGS],
-      Key.right : [STATE.JOG, STATE.PWM, STATE.PWM_SEQUENCE, STATE.PWM_MATRIX,
-                   STATE.SETTINGS]
+      DISPLAY   : [C.RUN, C.JOG, C.PWM, C.PWM_SEQUENCE, C.PWM_MATRIX,
+                   C.SETTINGS],
+      Key.right : [STATE.RUN, STATE.JOG, STATE.PWM, STATE.PWM_SEQUENCE,
+                   STATE.PWM_MATRIX, STATE.SETTINGS]
     }
     pageSettings[state] = { MODE: PAGE_STYLE.NAVIGATION }
+  elif state is STATE.RUN:
+    stateMachine[state] = {
+      Key.left : STATE.MAIN,
+      RIGHT_ALWAYS : STATE.RUN_SEQUENCE
+    }
+    pageSettings[state] = { MODE: PAGE_STYLE.NAVIGATION }
+  elif state is STATE.RUN_SEQUENCE:
+    stateMachine[state] = { Key.left : STATE.RUN }
+    pageSettings[state] = { MODE: PAGE_STYLE.RUN_SEQUENCE }
   elif state is STATE.JOG:
     stateMachine[state] = {
       DISPLAY   : [AXIS.X, AXIS.Y, AXIS.Z],
@@ -81,16 +91,16 @@ for state in states:
     }
     pageSettings[state] = { MODE: PAGE_STYLE.NAVIGATION }
   elif state is STATE.JOG_AXIS:
-    stateMachine[state] = { Key.left  : STATE.JOG }
+    stateMachine[state] = { Key.left : STATE.JOG }
     pageSettings[state] = { MODE: PAGE_STYLE.JOG }
   elif state is STATE.PWM:
-    stateMachine[state] = { Key.left  : STATE.MAIN }
+    stateMachine[state] = { Key.left : STATE.MAIN }
     pageSettings[state] = { MODE: PAGE_STYLE.PWM }
   elif state is STATE.PWM_SEQUENCE:
-    stateMachine[state] = { Key.left  : STATE.MAIN }
+    stateMachine[state] = { Key.left : STATE.MAIN }
     pageSettings[state] = { MODE: PAGE_STYLE.PWM_SEQUENCE }
   elif state is STATE.PWM_MATRIX:
-    stateMachine[state] = { Key.left  : STATE.MAIN }
+    stateMachine[state] = { Key.left : STATE.MAIN }
     pageSettings[state] = { MODE: PAGE_STYLE.PWM_MATRIX }
   elif state is STATE.SETTINGS:
     stateMachine[state] = {
@@ -109,13 +119,13 @@ for state in states:
     }
     pageSettings[state] = { MODE: PAGE_STYLE.NAVIGATION }
   elif state is STATE.PINMAP_SINGLE:
-    stateMachine[state] = { Key.left  : STATE.PINMAP }
+    stateMachine[state] = { Key.left : STATE.PINMAP }
     pageSettings[state] = { MODE: PAGE_STYLE.EDIT }
   elif state is STATE.PWM_FREQUENCY:
-    stateMachine[state] = { Key.left  : STATE.SETTINGS }
+    stateMachine[state] = { Key.left : STATE.SETTINGS }
     pageSettings[state] = { MODE: PAGE_STYLE.EDIT }
   elif state is STATE.PWM_DUTY_CYCLE:
-    stateMachine[state] = { Key.left  : STATE.SETTINGS }
+    stateMachine[state] = { Key.left : STATE.SETTINGS }
     pageSettings[state] = { MODE: PAGE_STYLE.EDIT }
   else:
     raise Exception("Unsupported state has been encountered (State Machine).")
@@ -194,7 +204,16 @@ def on_release(key):
   # UP and DOWN case
   if key in [Key.up, Key.down]:
     if pageMode is PAGE_STYLE.NAVIGATION:
-      moveCursorUpDown(currentState, key)
+
+      maxLength = 0
+
+      if DISPLAY in stateMachine[currentState]:
+        maxLength = len(stateMachine[currentState][DISPLAY])
+
+      if currentState is STATE.RUN:
+        maxLength = len(RunConfig.runSequencesTitles)
+
+      moveCursorUpDown(currentState, key, maxLength)
 
     if pageMode is PAGE_STYLE.JOG:
       if H.__verbose__:
@@ -210,19 +229,21 @@ def on_release(key):
   if key is Key.left and Key.left in stateMachine[currentState].keys():
     currentState = stateMachine[currentState][key]
 
-  if key is Key.right and Key.right in stateMachine[currentState].keys():
+
+  if key is Key.right:
     absoluteIndex = pageDisplayIndex[currentState] + cursorIndex[currentState]
 
-    if absoluteIndex < len(stateMachine[currentState][key]):
+    if RIGHT_ALWAYS in stateMachine[currentState].keys():
+      currentState = stateMachine[currentState][RIGHT_ALWAYS]
+
+    elif Key.right in stateMachine[currentState].keys() \
+         and absoluteIndex < len(stateMachine[currentState][key]):
       currentState = stateMachine[currentState][key][absoluteIndex]
 
   DisplayLCD()
 
-def moveCursorUpDown(state, direction):
+def moveCursorUpDown(state, direction, maxLength):
   global cursorIndex, pageDisplayIndex
-
-  maxLength = len(stateMachine[state][DISPLAY]) \
-              if DISPLAY in stateMachine[state] else 0
 
   if direction == Key.up:
     # You are at the top of the page, do nothing.
@@ -238,7 +259,7 @@ def moveCursorUpDown(state, direction):
 
   elif direction == Key.down:
     # You are at the bottom of the page, do nothing.
-    if cursorIndex[state] + pageDisplayIndex[state] == maxLength-1:
+    if cursorIndex[state] + pageDisplayIndex[state] >= maxLength-1:
       # do nothing
       pass
     # Your cursor is at the bottom, but not at the bottom of the page.
@@ -258,6 +279,17 @@ def DisplayLCD():
     jogIndex = cursorIndex[STATE.JOG] + pageDisplayIndex[STATE.JOG]
     axis = stateMachine[STATE.JOG][VALUE][jogIndex]
     displayTexts = DisplayModule.DisplayJogAxis(axis)
+
+  elif currentState == STATE.RUN:
+    displayList = RunConfig.runSequencesTitles
+    ci = cursorIndex[currentState]
+    pdi = pageDisplayIndex[currentState]
+    displayTexts = DisplayModule.DisplayEntries(displayList, pdi, ci)
+
+  elif currentState == STATE.RUN_SEQUENCE:
+    runIndex = cursorIndex[STATE.RUN] + pageDisplayIndex[STATE.RUN]
+    runSequenceTitle = RunConfig.runSequencesTitles[runIndex]
+    displayTexts = DisplayModule.DisplayRunSequence(runSequenceTitle)
 
   elif currentState == STATE.PWM:
     displayTexts = DisplayModule.DisplayPWM(PWMModule.GetRTDTemp())

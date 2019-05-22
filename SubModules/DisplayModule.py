@@ -117,4 +117,13 @@ def DisplayEntries(displayList, pdi, ci):
 
   return displayTexts
 
+def DisplayRunSequence(runSequenceTitle):
+  return [
+    runSequenceTitle,
+    " ",
+    " ",
+    "Step: i"
+  ]
+
+
 ################################################################################

@@ -28,7 +28,8 @@ PageStyle = enum(
   PWM = "PWM",
   PWM_SEQUENCE = "PWM_SEQUENCE",
   PWM_MATRIX = "PWM_MATRIX",
-  EDIT = "EDIT"
+  EDIT = "EDIT",
+  RUN_SEQUENCE = "RUN_SEQUENCE"
 )
 
 PwmConfig = enum(
@@ -44,6 +45,9 @@ STATE = enum(
   MAIN           = "MAIN",
   JOG            = "JOG",
   JOG_AXIS       = "JOG_AXIS",
+
+  RUN            = "RUN",
+  RUN_SEQUENCE   = "RUN_SEQUENCE",
 
   SETTINGS       = "SETTINGS",
   PWM_FREQUENCY  = "PWM_FREQUENCY",
