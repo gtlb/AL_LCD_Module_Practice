@@ -9,15 +9,15 @@
   },
   {
     "name": "WAIT",
-    "arguments": [1]
+    "arguments": [5]
   },
   {
-    "name": "MOVE_TO",
-    "arguments": ["Z", 0]
+    "name": "IO",
+    "arguments": [17, 1]
   },
   {
-    "name": "MOVE_TO",
-    "arguments": ["Y", 2]
+    "name": "IO",
+    "arguments": [17, 0]
   },
   {
     "name": "MOVE_TO_MULT",

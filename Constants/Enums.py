@@ -60,3 +60,12 @@ STATE = enum(
   PWM_SEQUENCE   = "PWM_SEQUENCE",
   PWM_MATRIX     = "PWM_MATRIX"
 )
+
+ActName = enum(
+  MOVE_TO      = "MOVE_TO",
+  WAIT         = "WAIT",
+  IO           = "IO",
+  PWM          = "PWM",
+  PWM_SEQUENCE = "PWM_SEQUENCE",
+  PWM_MATRIX   = "PWM_MATRIX"
+)

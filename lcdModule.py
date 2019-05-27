@@ -15,6 +15,7 @@ from Constants.Enums import IO
 from Constants.Enums import PageStyle as PAGE_STYLE
 from Constants.Enums import Direction as DIR
 from Constants.Enums import STATE
+from Constants.Enums import PwmConfig as PWM
 from Constants.Constants import DISPLAY, VALUE, MODE, RIGHT_ALWAYS
 
 
@@ -177,7 +178,7 @@ def on_press(key):
 
     if pageMode is PAGE_STYLE.PWM:
       RunConfig.ModifyPWMDutyCycle(key)
-      PWMModule.UpdateDutyCycle()
+      PWMModule.UpdateDutyCycle(RunConfig.pwm[PWM.DUTY_CYCLE])
 
   if key is Key.left and Key.left in stateMachine[currentState].keys():
     if currentState in [STATE.PWM, STATE.PWM_SEQUENCE, STATE.PWM_MATRIX]:
@@ -187,16 +188,22 @@ def on_press(key):
     absoluteIndex = pageDisplayIndex[currentState] + cursorIndex[currentState]
 
     if currentState is STATE.RUN:
-      RunModule.StartRunSequence(RunConfig.runSequencesTitles[absoluteIndex])
+      RunModule.StartRunSequence(RunConfig.runSequencesTitles[absoluteIndex], RTD)
 
     if Key.right in stateMachine[currentState].keys():
       if absoluteIndex < len(stateMachine[currentState][key]):
         if stateMachine[currentState][key][absoluteIndex] is STATE.PWM:
-          PWMModule.StartPWM(RTD)
+          PWMModule.StartPWM(RTD,
+            RunConfig.pwm[PWM.FREQUENCY],
+            RunConfig.pwm[PWM.DUTY_CYCLE])
         elif stateMachine[currentState][key][absoluteIndex] is STATE.PWM_SEQUENCE:
-          PWMModule.StartPWMSequence(RTD)
+          PWMModule.StartPWMSequence(RTD,
+            RunConfig.pwm[PWM.FREQUENCY],
+            RunConfig.pwm[PWM.DUTY_CYCLE])
         elif stateMachine[currentState][key][absoluteIndex] is STATE.PWM_MATRIX:
-          PWMModule.StartPWMMatrix(RTD)
+          PWMModule.StartPWMMatrix(RTD,
+            RunConfig.pwm[PWM.FREQUENCY],
+            RunConfig.pwm[PWM.DUTY_CYCLE])
 
 
 def on_release(key):

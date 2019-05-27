@@ -34,6 +34,9 @@ pwmSequenceIndexLock = Lock()
 pwmMatrixCondition = [0, 0, 0]
 pwmMatrixConditionLock = Lock()
 
+pwmFrequency = None
+pwmDutyCycle = None
+
 def SetIsRunPWM(value):
   global isRunPWM, isRunPWMLock
 
@@ -89,15 +92,18 @@ def GetPwmMatrixCurrentCondition():
 
   return temp
 
-def UpdateDutyCycle():
+def UpdateDutyCycle(newPWMDutyCycle):
   if H.__raspberry__:
-    global pwmInst
+    global pwmInst, pwmDutyCycle
 
-    pwmInst.ChangeDutyCycle(RunConfig.pwm[PWM.DUTY_CYCLE])
+    pwmDutyCycle = newPWMDutyCycle
+    pwmInst.ChangeDutyCycle(pwmDutyCycle)
 
-def StartPWM(rtd):
-  global RTD
+def StartPWM(rtd, frequency, dutyCycle):
+  global RTD, pwmFrequency, pwmDutyCycle
   RTD = rtd
+  pwmFrequency = frequency
+  pwmDutyCycle = dutyCycle
 
   SetIsRunPWM(True)
 
@@ -113,9 +119,12 @@ def StartPWM(rtd):
   PWMThread.daemon = True
   PWMThread.start()
 
-def StartPWMSequence(rtd):
-  global RTD
+def StartPWMSequence(rtd, frequency, dutyCycle):
+  global RTD, pwmFrequency, pwmDutyCycle
   RTD = rtd
+  pwmFrequency = frequency
+  pwmDutyCycle = dutyCycle
+
 
   SetIsRunPWM(True)
 
@@ -132,9 +141,11 @@ def StartPWMSequence(rtd):
   PWMThread.start()
 
 
-def StartPWMMatrix(rtd):
-  global RTD
+def StartPWMMatrix(rtd, frequency, dutyCycle):
+  global RTD, pwmFrequency, pwmDutyCycle
   RTD = rtd
+  pwmFrequency = frequency
+  pwmDutyCycle = dutyCycle
 
   SetIsRunPWM(True)
 
@@ -167,7 +178,7 @@ def RunTemp():
     time.sleep(0.2)
 
 def LogTemp():
-  fo = open(str(RunConfig.pwm[PWM.DUTY_CYCLE]) + "_"
+  fo = open(str(pwmDutyCycle) + "_"
     + datetime.datetime.now().strftime('%Y-%m-%d %H.%M.%S') + ".txt", "w")
 
   while True:
@@ -191,13 +202,13 @@ def LogTemp():
     time.sleep(delay)
 
 def RunPWM():
+  global pwmInst, pwmFrequency, pwmDutyCycle
+
   # Setup PWM
   if H.__raspberry__:
-    global pwmInst
-
     GPIO.output(RunConfig.pwm[PWM.ON_OFF_PIN], GPIO.HIGH)
-    pwmInst = GPIO.PWM(RunConfig.pwm[PWM.PWM_PIN], RunConfig.pwm[PWM.FREQUENCY])
-    pwmInst.start(RunConfig.pwm[PWM.DUTY_CYCLE])
+    pwmInst = GPIO.PWM(RunConfig.pwm[PWM.PWM_PIN], pwmFrequency)
+    pwmInst.start(pwmDutyCycle)
 
   trigger = False
   TARGET_TEMP_HIGH = 240
@@ -218,21 +229,21 @@ def RunPWM():
         pwmInst.stop()
       elif trigger and temp < TARGET_TEMP_LOW:
         trigger = False
-        pwmInst.start(RunConfig.pwm[PWM.DUTY_CYCLE])
+        pwmInst.start(pwmDutyCycle)
 
     if H.__verbose__:
-      print("PWM RUNNING " + str(RunConfig.pwm[PWM.DUTY_CYCLE]))
+      print("PWM RUNNING " + str(pwmDutyCycle))
 
     time.sleep(1)
 
 def RunPWMSequence():
+  global pwmInst, pwmFrequency, pwmDutyCycle
+
   # Setup PWM
   if H.__raspberry__:
-    global pwmInst
-
     GPIO.output(RunConfig.pwm[PWM.ON_OFF_PIN], GPIO.HIGH)
-    pwmInst = GPIO.PWM(RunConfig.pwm[PWM.PWM_PIN], RunConfig.pwm[PWM.FREQUENCY])
-    pwmInst.start(RunConfig.pwm[PWM.DUTY_CYCLE])
+    pwmInst = GPIO.PWM(RunConfig.pwm[PWM.PWM_PIN], pwmFrequency)
+    pwmInst.start(pwmDutyCycle)
 
   SetPWMSequenceIndex(0)
   lastThreeTemp = [0.0, 0.0, 0.0]
@@ -268,25 +279,27 @@ def RunPWMSequence():
       if GetPWMSequenceIndex() < len(RunConfig.pwmSequence["Sequence"])-1:
         SetPWMSequenceIndex(GetPWMSequenceIndex() + 1)
 
+      newPWMDutyCycle = RunConfig.pwm[PWM.DUTY_CYCLE_LIST][level]
+
       if H.__verbose__:
-        print("Set Duty Cycle To: " + str(RunConfig.pwm[PWM.DUTY_CYCLE_LIST][level]))
+        print("Set Duty Cycle To: " + str(newPWMDutyCycle))
 
       if H.__raspberry__:
-        pwmInst.ChangeDutyCycle(RunConfig.pwm[PWM.DUTY_CYCLE_LIST][level])
+        UpdateDutyCycle(newPWMDutyCycle)
 
     if H.__verbose__:
-      print("PWM RUNNING " + str(RunConfig.pwm[PWM.DUTY_CYCLE]))
+      print("PWM RUNNING " + str(pwmDutyCycle))
 
     time.sleep(1)
 
 def RunPWMMatrix():
+  global pwmInst, pwmFrequency, pwmDutyCycle
+
   # Setup PWM
   if H.__raspberry__:
-    global pwmInst
-
     GPIO.output(RunConfig.pwm[PWM.ON_OFF_PIN], GPIO.HIGH)
-    pwmInst = GPIO.PWM(RunConfig.pwm[PWM.PWM_PIN], RunConfig.pwm[PWM.FREQUENCY])
-    pwmInst.start(RunConfig.pwm[PWM.DUTY_CYCLE])
+    pwmInst = GPIO.PWM(RunConfig.pwm[PWM.PWM_PIN], pwmFrequency)
+    pwmInst.start(pwmDutyCycle)
 
   lastThreeData = [(0.0, 0), (0.0, 0), (0.0, 0)]
 
@@ -325,16 +338,18 @@ def RunPWMMatrix():
     SetPWMMaxtrixCondition(condition)
 
     if pwmOutputIndex != lastPWMOutputIndex:
+      newPWMDutyCycle = RunConfig.pwm[PWM.DUTY_CYCLE_LIST][pwmOutputIndex]
+
       if H.__verbose__:
-        print("Set Duty Cycle To: " + str(RunConfig.pwm[PWM.DUTY_CYCLE_LIST][pwmOutputIndex]))
+        print("Set Duty Cycle To: " + str(newPWMDutyCycle))
 
       if H.__raspberry__:
-        pwmInst.ChangeDutyCycle(RunConfig.pwm[PWM.DUTY_CYCLE_LIST][pwmOutputIndex])
+        UpdateDutyCycle(newPWMDutyCycle)
 
       lastPWMOutputIndex = pwmOutputIndex
 
     if H.__verbose__:
-      print("PWM RUNNING " + str(RunConfig.pwm[PWM.DUTY_CYCLE]))
+      print("PWM RUNNING " + str(pwmDutyCycle))
 
     time.sleep(1)
 

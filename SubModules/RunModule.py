@@ -4,8 +4,10 @@ import threading
 import time
 import json
 import Constants.Constants as C
+import SubModules.ActHandler as ActHandler
 from threading import Lock
 from Models.RunConfig import RunConfig as RC
+from Constants.Enums import ActName
 from Constants.Enums import PwmConfig as PWM
 
 RunConfig = RC.getInstance()
@@ -57,18 +59,19 @@ def LoadRunSequence(sequenceTitle):
 def RunSequence():
   global runIndex, runSequence, runSequenceTitle
 
+  SetupRaspberryPi(runSequence)
+
   while runIndex < len(runSequence):
     if not isRunSequence:
       break
-      
+
     runAct = runSequence[runIndex]
     runActName = runAct['name']
     runActArgs = runAct['arguments']
 
-    if H.__verbose__:
-      print("Running: {} with args {}".format(runActName, runActArgs))
+    ActHandler.HandleAct(runActName, runActArgs)
 
-    time.sleep(1)
+    time.sleep(0.1)
 
     runIndex += 1
 
@@ -76,3 +79,19 @@ def RunSequence():
     print("Sequence {} Complete.".format(runSequenceTitle))
 
   pass
+
+def SetupRaspberryPi(runSequence):
+
+  if H.__raspberry__:
+    import RPi.GPIO as GPIO
+    GPIO.setmode(GPIO.BCM)
+
+  pinList = set()
+
+  for act in runSequence:
+    if act['name'] == ActName.IO:
+      pinList.add(act['arguments'][0])
+
+  for pin in pinList:
+    if H.__raspberry__:
+      GPIO.setup(pin, GPIO.OUT, initial = GPIO.LOW)
