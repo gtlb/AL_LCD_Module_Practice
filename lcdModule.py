@@ -5,6 +5,7 @@ import Constants.Constants as C
 import SubModules.DisplayModule as DisplayModule
 import SubModules.JogModule as JogModule
 import SubModules.PWMModule as PWMModule
+import SubModules.RunModule as RunModule
 import Utilities.FileHandler as FH
 from Models.RunConfig import RunConfig as RC
 from threading import Lock
@@ -182,15 +183,20 @@ def on_press(key):
     if currentState in [STATE.PWM, STATE.PWM_SEQUENCE, STATE.PWM_MATRIX]:
       PWMModule.StopPWM()
 
-  if key is Key.right and Key.right in stateMachine[currentState].keys():
+  if key is Key.right:
     absoluteIndex = pageDisplayIndex[currentState] + cursorIndex[currentState]
-    if absoluteIndex < len(stateMachine[currentState][key]):
-      if stateMachine[currentState][key][absoluteIndex] is STATE.PWM:
-        PWMModule.StartPWM(RTD)
-      elif stateMachine[currentState][key][absoluteIndex] is STATE.PWM_SEQUENCE:
-        PWMModule.StartPWMSequence(RTD)
-      elif stateMachine[currentState][key][absoluteIndex] is STATE.PWM_MATRIX:
-        PWMModule.StartPWMMatrix(RTD)
+
+    if currentState is STATE.RUN:
+      RunModule.StartRunSequence(RunConfig.runSequencesTitles[absoluteIndex])
+
+    if Key.right in stateMachine[currentState].keys():
+      if absoluteIndex < len(stateMachine[currentState][key]):
+        if stateMachine[currentState][key][absoluteIndex] is STATE.PWM:
+          PWMModule.StartPWM(RTD)
+        elif stateMachine[currentState][key][absoluteIndex] is STATE.PWM_SEQUENCE:
+          PWMModule.StartPWMSequence(RTD)
+        elif stateMachine[currentState][key][absoluteIndex] is STATE.PWM_MATRIX:
+          PWMModule.StartPWMMatrix(RTD)
 
 
 def on_release(key):
