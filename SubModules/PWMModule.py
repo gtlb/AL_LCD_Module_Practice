@@ -46,6 +46,17 @@ def SetIsRunPWM(value):
   isRunPWM = value
   isRunPWMLock.release()
 
+def GetIsRunPWM():
+  global isRunPWM, isRunPWMLock
+
+  value = None
+
+  isRunPWMLock.acquire()
+  value = isRunPWM
+  isRunPWMLock.release()
+
+  return value
+
 def SetRTDTemp(value):
   global RTDTemp, RTDTempLock
 
@@ -250,6 +261,8 @@ def RunPWM():
 
     time.sleep(1)
 
+  SetIsRunPWM(False)
+
 def RunPWMSequence():
   global pwmInst, pwmFrequency, pwmDutyCycle, pwmTimeLimit
 
@@ -305,6 +318,8 @@ def RunPWMSequence():
       print("PWM RUNNING " + str(pwmDutyCycle))
 
     time.sleep(1)
+
+  SetIsRunPWM(False)
 
 def RunPWMMatrix():
   global pwmInst, pwmFrequency, pwmDutyCycle, pwmTimeLimit
@@ -366,6 +381,8 @@ def RunPWMMatrix():
       print("PWM RUNNING " + str(pwmDutyCycle))
 
     time.sleep(1)
+
+  SetIsRunPWM(False)
 
 def GetSlope(tempData):
   slopeList = []

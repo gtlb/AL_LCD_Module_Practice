@@ -18,9 +18,9 @@ def HandleAct(runActName, runActArgs, RTD):
   elif runActName == ActName.PWM:
     HandlePWM(runActArgs, RTD)
   elif runActName == ActName.PWM_SEQUENCE:
-    HandlePWMSequence(runActArgs)
+    HandlePWMSequence(runActArgs, RTD)
   elif runActName == ActName.PWM_MATRIX:
-    HandlePWMMatrix(runActArgs)
+    HandlePWMMatrix(runActArgs, RTD)
 
   if H.__verbose__:
     print("Finished {} act.".format(runActName))
@@ -37,8 +37,17 @@ def HandleIO(args):
 def HandlePWM(args, RTD):
   PWMModule.StartPWM(RTD, args[0], args[1], args[2])
 
-def HandlePWMSequence(args):
-  pass
+  while PWMModule.GetIsRunPWM():
+    time.sleep(0.5)
 
-def HandlePWMMatrix(args):
-  pass
+def HandlePWMSequence(args, RTD):
+  PWMModule.StartPWMSequence(RTD, args[0], args[1], args[2])
+
+  while PWMModule.GetIsRunPWM():
+    time.sleep(0.5)
+
+def HandlePWMMatrix(args, RTD):
+  PWMModule.StartPWMMatrix(RTD, args[0], args[1], args[2])
+
+  while PWMModule.GetIsRunPWM():
+    time.sleep(0.5)

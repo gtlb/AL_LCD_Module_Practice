@@ -25,10 +25,22 @@
   },
   {
     "name": "PWM",
-    "arguments": [500, 29, 10]
+    "arguments": [500, 29, 5]
   },
   {
     "name": "WAIT",
     "arguments": [5]
+  },
+  {
+    "name": "PWM_SEQUENCE",
+    "arguments": [500, 29, 5]
+  },
+  {
+    "name": "WAIT",
+    "arguments": [5]
+  },
+  {
+    "name": "PWM_MATRIX",
+    "arguments": [500, 29, 5]
   }
 ]
