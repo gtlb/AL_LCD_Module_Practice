@@ -183,6 +183,8 @@ def on_press(key):
   if key is Key.left and Key.left in stateMachine[currentState].keys():
     if currentState in [STATE.PWM, STATE.PWM_SEQUENCE, STATE.PWM_MATRIX]:
       PWMModule.StopPWM()
+    elif currentState in [STATE.RUN_SEQUENCE]:
+      RunModule.StopRunSequence()
 
   if key is Key.right:
     absoluteIndex = pageDisplayIndex[currentState] + cursorIndex[currentState]
@@ -195,15 +197,18 @@ def on_press(key):
         if stateMachine[currentState][key][absoluteIndex] is STATE.PWM:
           PWMModule.StartPWM(RTD,
             RunConfig.pwm[PWM.FREQUENCY],
-            RunConfig.pwm[PWM.DUTY_CYCLE])
+            RunConfig.pwm[PWM.DUTY_CYCLE],
+            None)
         elif stateMachine[currentState][key][absoluteIndex] is STATE.PWM_SEQUENCE:
           PWMModule.StartPWMSequence(RTD,
             RunConfig.pwm[PWM.FREQUENCY],
-            RunConfig.pwm[PWM.DUTY_CYCLE])
+            RunConfig.pwm[PWM.DUTY_CYCLE],
+            None)
         elif stateMachine[currentState][key][absoluteIndex] is STATE.PWM_MATRIX:
           PWMModule.StartPWMMatrix(RTD,
             RunConfig.pwm[PWM.FREQUENCY],
-            RunConfig.pwm[PWM.DUTY_CYCLE])
+            RunConfig.pwm[PWM.DUTY_CYCLE],
+            None)
 
 
 def on_release(key):

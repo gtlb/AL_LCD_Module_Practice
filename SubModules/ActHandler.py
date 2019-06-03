@@ -1,26 +1,26 @@
 import Header as H
 import time
 import SubModules.PWMModule as PWMModule
-import lcdModule
 from Constants.Enums import ActName
 
-def HandleAct(runActName, runActArgs):
+# TODO: find a way to have a single source of resources
+def HandleAct(runActName, runActArgs, RTD):
 
   if H.__verbose__:
-    print("Running {} act with args {}.".format(runActName, args))
+    print("Running {} act with args {}.".format(runActName, runActArgs))
 
   if runActName == ActName.MOVE_TO:
     print("Run MOVE_TO")
   elif runActName == ActName.WAIT:
-    HandleWait(args)
+    HandleWait(runActArgs)
   elif runActName == ActName.IO:
-    HandleIO(args)
+    HandleIO(runActArgs)
   elif runActName == ActName.PWM:
-    HandlePWM(args)
+    HandlePWM(runActArgs, RTD)
   elif runActName == ActName.PWM_SEQUENCE:
-    HandlePWMSequence(args)
+    HandlePWMSequence(runActArgs)
   elif runActName == ActName.PWM_MATRIX:
-    HandlePWMMatrix(args)
+    HandlePWMMatrix(runActArgs)
 
   if H.__verbose__:
     print("Finished {} act.".format(runActName))
@@ -34,7 +34,7 @@ def HandleIO(args):
     import RPi.GPIO as GPIO
     GPIO.output(args[0], args[1])
 
-def HandlePWM(args):
+def HandlePWM(args, RTD):
   PWMModule.StartPWM(RTD, args[0], args[1], args[2])
 
 def HandlePWMSequence(args):

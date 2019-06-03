@@ -9,7 +9,7 @@
   },
   {
     "name": "WAIT",
-    "arguments": [5]
+    "arguments": [1]
   },
   {
     "name": "IO",
@@ -22,6 +22,10 @@
   {
     "name": "MOVE_TO_MULT",
     "arguments": [["Y", "A"], [3, 2]]
+  },
+  {
+    "name": "PWM",
+    "arguments": [500, 29, 10]
   },
   {
     "name": "WAIT",

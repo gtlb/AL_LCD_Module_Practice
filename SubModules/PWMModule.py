@@ -37,6 +37,8 @@ pwmMatrixConditionLock = Lock()
 pwmFrequency = None
 pwmDutyCycle = None
 
+pwmTimeLimit = None
+
 def SetIsRunPWM(value):
   global isRunPWM, isRunPWMLock
 
@@ -99,11 +101,14 @@ def UpdateDutyCycle(newPWMDutyCycle):
     pwmDutyCycle = newPWMDutyCycle
     pwmInst.ChangeDutyCycle(pwmDutyCycle)
 
-def StartPWM(rtd, frequency, dutyCycle):
-  global RTD, pwmFrequency, pwmDutyCycle
+def StartPWM(rtd, frequency, dutyCycle, timeout):
+  global RTD, pwmFrequency, pwmDutyCycle, pwmTimeLimit
   RTD = rtd
   pwmFrequency = frequency
   pwmDutyCycle = dutyCycle
+
+  if timeout is not None:
+    pwmTimeLimit = time.time() + timeout
 
   SetIsRunPWM(True)
 
@@ -119,12 +124,14 @@ def StartPWM(rtd, frequency, dutyCycle):
   PWMThread.daemon = True
   PWMThread.start()
 
-def StartPWMSequence(rtd, frequency, dutyCycle):
-  global RTD, pwmFrequency, pwmDutyCycle
+def StartPWMSequence(rtd, frequency, dutyCycle, timeout):
+  global RTD, pwmFrequency, pwmDutyCycle, pwmTimeLimit
   RTD = rtd
   pwmFrequency = frequency
   pwmDutyCycle = dutyCycle
 
+  if timeout is not None:
+    pwmTimeLimit = time.time() + timeout
 
   SetIsRunPWM(True)
 
@@ -141,11 +148,14 @@ def StartPWMSequence(rtd, frequency, dutyCycle):
   PWMThread.start()
 
 
-def StartPWMMatrix(rtd, frequency, dutyCycle):
-  global RTD, pwmFrequency, pwmDutyCycle
+def StartPWMMatrix(rtd, frequency, dutyCycle, timeout):
+  global RTD, pwmFrequency, pwmDutyCycle, pwmTimeLimit
   RTD = rtd
   pwmFrequency = frequency
   pwmDutyCycle = dutyCycle
+
+  if timeout is not None:
+    pwmTimeLimit = time.time() + timeout
 
   SetIsRunPWM(True)
 
@@ -165,8 +175,10 @@ def StopPWM():
   SetIsRunPWM(False)
 
 def RunTemp():
+  global pwmTimeLimit
+
   while True:
-    if not isRunPWM:
+    if not isRunPWM or (pwmTimeLimit is not None and pwmTimeLimit < time.time()):
       break
 
     if H.__raspberry__:
@@ -178,11 +190,13 @@ def RunTemp():
     time.sleep(0.2)
 
 def LogTemp():
+  global pwmTimeLimit
+
   fo = open(str(pwmDutyCycle) + "_"
     + datetime.datetime.now().strftime('%Y-%m-%d %H.%M.%S') + ".txt", "w")
 
   while True:
-    if not isRunPWM:
+    if not isRunPWM or (pwmTimeLimit is not None and pwmTimeLimit < time.time()):
       fo.close()
       break
 
@@ -202,7 +216,7 @@ def LogTemp():
     time.sleep(delay)
 
 def RunPWM():
-  global pwmInst, pwmFrequency, pwmDutyCycle
+  global pwmInst, pwmFrequency, pwmDutyCycle, pwmTimeLimit
 
   # Setup PWM
   if H.__raspberry__:
@@ -215,7 +229,7 @@ def RunPWM():
   TARGET_TEMP_LOW = 200
 
   while True:
-    if not isRunPWM:
+    if not isRunPWM or (pwmTimeLimit is not None and pwmTimeLimit < time.time()):
       # PWM Cleanup
       if H.__raspberry__:
         pwmInst.stop()
@@ -237,7 +251,7 @@ def RunPWM():
     time.sleep(1)
 
 def RunPWMSequence():
-  global pwmInst, pwmFrequency, pwmDutyCycle
+  global pwmInst, pwmFrequency, pwmDutyCycle, pwmTimeLimit
 
   # Setup PWM
   if H.__raspberry__:
@@ -251,7 +265,7 @@ def RunPWMSequence():
   # TODO: Move to below
   temp = 0.0
   while True:
-    if not isRunPWM:
+    if not isRunPWM or (pwmTimeLimit is not None and pwmTimeLimit < time.time()):
       # PWM Cleanup
       if H.__raspberry__:
         pwmInst.stop()
@@ -293,7 +307,7 @@ def RunPWMSequence():
     time.sleep(1)
 
 def RunPWMMatrix():
-  global pwmInst, pwmFrequency, pwmDutyCycle
+  global pwmInst, pwmFrequency, pwmDutyCycle, pwmTimeLimit
 
   # Setup PWM
   if H.__raspberry__:
@@ -308,7 +322,7 @@ def RunPWMMatrix():
   timestamp = 0
   lastPWMOutputIndex = -1
   while True:
-    if not isRunPWM:
+    if not isRunPWM or (pwmTimeLimit is not None and pwmTimeLimit < time.time()):
       # PWM Cleanup
       if H.__raspberry__:
         pwmInst.stop()

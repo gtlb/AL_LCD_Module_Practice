@@ -5,12 +5,15 @@ import time
 import json
 import Constants.Constants as C
 import SubModules.ActHandler as ActHandler
+import SubModules.PWMModule as PWMModule
 from threading import Lock
 from Models.RunConfig import RunConfig as RC
 from Constants.Enums import ActName
 from Constants.Enums import PwmConfig as PWM
 
 RunConfig = RC.getInstance()
+
+RTD = None
 
 runIndex = 0
 runIndexLock = Lock()
@@ -21,8 +24,10 @@ isRunSequenceLock = Lock()
 runSequence = None
 runSequenceTitle = None
 
-def StartRunSequence(sequenceTitle):
-  global runSequence, runSequenceTitle
+def StartRunSequence(sequenceTitle, rtd):
+  global runSequence, runSequenceTitle, RTD
+
+  RTD = rtd
 
   runSequence = LoadRunSequence(sequenceTitle)
   runSequenceTitle = sequenceTitle
@@ -35,6 +40,8 @@ def StartRunSequence(sequenceTitle):
   runThread.start()
 
 def StopRunSequence():
+  # Need to stop PWM if it is running.
+  PWMModule.StopPWM()
   SetIsRunSequence(False)
 
 def SetRunIndex(index):
@@ -57,25 +64,32 @@ def LoadRunSequence(sequenceTitle):
 
 
 def RunSequence():
-  global runIndex, runSequence, runSequenceTitle
+  global runIndex, runSequence, runSequenceTitle, RTD
 
   SetupRaspberryPi(runSequence)
 
+  runFinished = True
   while runIndex < len(runSequence):
     if not isRunSequence:
+      runFinished = False
+
+      # As of now, sequence does not abort immediately.
+      if H.__verbose__:
+        print("Sequence {} Aborted.".format(runSequenceTitle))
       break
 
     runAct = runSequence[runIndex]
     runActName = runAct['name']
     runActArgs = runAct['arguments']
 
-    ActHandler.HandleAct(runActName, runActArgs)
+    # TODO: Currently PWM is non-blocking
+    ActHandler.HandleAct(runActName, runActArgs, RTD)
 
     time.sleep(0.1)
 
     runIndex += 1
 
-  if H.__verbose__:
+  if runFinished and H.__verbose__:
     print("Sequence {} Complete.".format(runSequenceTitle))
 
   pass
