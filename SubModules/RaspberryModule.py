@@ -21,11 +21,11 @@ def Setup():
 
   GPIO.setup(pinMap[AXIS.Y][PIN.CLK], GPIO.OUT, initial = GPIO.LOW)
   GPIO.setup(pinMap[AXIS.Y][PIN.DIR], GPIO.OUT, initial = GPIO.LOW)
-  GPIO.setup(pinMap[AXIS.Y][PIN.ENA], GPIO.OUT, initial = GPIO.LOW)
+  GPIO.setup(pinMap[AXIS.Y][PIN.ENA], GPIO.OUT, initial = GPIO.HIGH)
 
   GPIO.setup(pinMap[AXIS.Z][PIN.CLK], GPIO.OUT, initial = GPIO.LOW)
   GPIO.setup(pinMap[AXIS.Z][PIN.DIR], GPIO.OUT, initial = GPIO.LOW)
-  GPIO.setup(pinMap[AXIS.Z][PIN.ENA], GPIO.OUT, initial = GPIO.LOW)
+  GPIO.setup(pinMap[AXIS.Z][PIN.ENA], GPIO.OUT, initial = GPIO.HIGH)
 
   GPIO.setup(pinSol, GPIO.OUT, initial = GPIO.LOW)
   ############################

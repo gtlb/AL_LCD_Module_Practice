@@ -15,7 +15,7 @@ currentPulseMap = {}
 currentPulseMapLock = Lock()
 
 if H.__raspberry__:
-  import RPI.GPIO as GPIO
+  import RPi.GPIO as GPIO
 
 isMoving = False
 isMovingLock = Lock()
