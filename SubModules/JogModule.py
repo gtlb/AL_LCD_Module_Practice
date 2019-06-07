@@ -9,7 +9,6 @@ from Models.RunConfig import RunConfig as RC
 
 RunConfig = RC.getInstance()
 
-pinSol = RunConfig.pinSol
 pinMap = RunConfig.pinMap
 
 if H.__raspberry__:
@@ -47,7 +46,7 @@ def JogHandler():
     if isJogging:
       if H.__verbose__:
         print("Jogging in Axis: " + joggingAxis)
-        
+
       GPIOOutput(pinMap[joggingAxis][PIN.CLK], (pulseCounter+1)%2)
       pulseCounter += 1
 

@@ -1,5 +1,6 @@
 import Header as H
 import time
+import SubModules.MoveModule as MoveModule
 import SubModules.PWMModule as PWMModule
 from Constants.Enums import ActName
 
@@ -10,7 +11,7 @@ def HandleAct(runActName, runActArgs, RTD):
     print("Running {} act with args {}.".format(runActName, runActArgs))
 
   if runActName == ActName.MOVE_TO:
-    print("Run MOVE_TO")
+    HandleMoveTo(runActArgs)
   elif runActName == ActName.WAIT:
     HandleWait(runActArgs)
   elif runActName == ActName.IO:
@@ -25,6 +26,15 @@ def HandleAct(runActName, runActArgs, RTD):
   if H.__verbose__:
     print("Finished {} act.".format(runActName))
 
+def HandleMoveTo(args):
+  axis = args[0]
+  direction = args[1]
+  numSteps = args[2]
+  delay = args[3]
+  MoveModule.StartMoving(axis, direction, numSteps, delay)
+
+  while MoveModule.GetIsMoving():
+    time.sleep(0.5)
 
 def HandleWait(args):
   time.sleep(args[0])
