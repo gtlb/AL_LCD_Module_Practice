@@ -5,6 +5,7 @@ import time
 import json
 import Constants.Constants as C
 import SubModules.ActHandler as ActHandler
+import SubModules.MoveModule as MoveModule
 import SubModules.PWMModule as PWMModule
 from threading import Lock
 from Models.RunConfig import RunConfig as RC
@@ -44,6 +45,7 @@ def StartRunSequence(sequenceTitle, rtd):
 def StopRunSequence():
   # Need to stop PWM if it is running.
   PWMModule.StopPWM()
+  MoveModule.StopMoving()
   SetIsRunSequence(False)
 
 def SetRunIndex(index):

@@ -38,7 +38,7 @@ def GetIsMoving():
 
   return value
 
-def StopRunSequence():
+def StopMoving():
   # Need to stop PWM if it is running.
   SetIsMoving(False)
 
