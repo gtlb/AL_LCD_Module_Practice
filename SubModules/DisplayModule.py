@@ -117,12 +117,12 @@ def DisplayEntries(displayList, pdi, ci):
 
   return displayTexts
 
-def DisplayRunSequence(runSequenceTitle):
+def DisplayRunSequence(runSequenceTitle, runText, runIndex):
   return [
     runSequenceTitle,
     " ",
-    " ",
-    "Step: i"
+    "Act: {}".format(runText),
+    "Step: {}".format(runIndex)
   ]
 
 

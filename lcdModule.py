@@ -7,6 +7,7 @@ import SubModules.JogModule as JogModule
 import SubModules.PWMModule as PWMModule
 import SubModules.RunModule as RunModule
 import Utilities.FileHandler as FH
+from Models.Globals import Globals as Globals
 from Models.RunConfig import RunConfig as RC
 from threading import Lock
 from pynput.keyboard import Key, Listener, Controller
@@ -22,6 +23,7 @@ from Constants.Constants import DISPLAY, VALUE, MODE, RIGHT_ALWAYS
 RTD = None
 RTDTemp = None
 
+Globals = Globals.getInstance()
 RunConfig = RC.getInstance()
 
 currentState = STATE.MAIN
@@ -307,7 +309,9 @@ def DisplayLCD():
   elif currentState == STATE.RUN_SEQUENCE:
     runIndex = cursorIndex[STATE.RUN] + pageDisplayIndex[STATE.RUN]
     runSequenceTitle = RunConfig.runSequencesTitles[runIndex]
-    displayTexts = DisplayModule.DisplayRunSequence(runSequenceTitle)
+    displayTexts = DisplayModule.DisplayRunSequence(runSequenceTitle,
+                     RunModule.GetRunText(),
+                     RunModule.GetRunIndex())
 
   elif currentState == STATE.PWM:
     displayTexts = DisplayModule.DisplayPWM(PWMModule.GetRTDTemp())
@@ -346,6 +350,10 @@ def DisplayLCD():
       print(displayTexts[i])
     print("--------------------")
 
+
+# Other Setups
+RunModule.SetDisplayLCDCallback(DisplayLCD)
+##############
 
 # Start key listener. Use `on_press` and `on_release` as button press handlers.
 keyListener = Listener(on_press=on_press, on_release=on_release)

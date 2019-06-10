@@ -24,6 +24,8 @@ isRunSequenceLock = Lock()
 runSequence = None
 runSequenceTitle = None
 
+displayLCDCallback = None
+
 def StartRunSequence(sequenceTitle, rtd):
   global runSequence, runSequenceTitle, RTD
 
@@ -50,6 +52,33 @@ def SetRunIndex(index):
   runIndexLock.acquire()
   runIndex = index
   runIndexLock.release()
+
+def GetRunIndex():
+  global runIndex, runIndexLock
+
+  runIndexLock.acquire()
+  value = runIndex
+  runIndexLock.release()
+
+  return value
+
+def GetRunText():
+  global runSequence, runIndex
+  value = None
+
+  runIndexLock.acquire()
+  if runIndex < len(runSequence):
+    value = runSequence[runIndex]['name']
+  else:
+    value = "Finished"
+  runIndexLock.release()
+
+  return value
+
+def SetDisplayLCDCallback(callback):
+  global displayLCDCallback
+
+  displayLCDCallback = callback
 
 def SetIsRunSequence(value):
   global isRunSequence, isRunSequenceLock
@@ -88,6 +117,7 @@ def RunSequence():
     time.sleep(0.1)
 
     runIndex += 1
+    displayLCDCallback()
 
   if runFinished and H.__verbose__:
     print("Sequence {} Complete.".format(runSequenceTitle))
