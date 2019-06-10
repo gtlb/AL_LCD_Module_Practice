@@ -5,7 +5,7 @@ import SubModules.PWMModule as PWMModule
 from Constants.Enums import ActName
 
 # TODO: find a way to have a single source of resources
-def HandleAct(runActName, runActArgs, RTD):
+def HandleAct(runActName, runActArgs, RTD, jumpCallback):
 
   if H.__verbose__:
     print("Running {} act with args {}.".format(runActName, runActArgs))
@@ -16,6 +16,8 @@ def HandleAct(runActName, runActArgs, RTD):
     HandleWait(runActArgs)
   elif runActName == ActName.IO:
     HandleIO(runActArgs)
+  elif runActName == ActName.JUMP:
+    HandleJump(runActArgs, jumpCallback)
   elif runActName == ActName.PWM:
     HandlePWM(runActArgs, RTD)
   elif runActName == ActName.PWM_SEQUENCE:
@@ -43,6 +45,10 @@ def HandleIO(args):
   if H.__raspberry__:
     import RPi.GPIO as GPIO
     GPIO.output(args[0], args[1])
+
+def HandleJump(args, jumpCallback):
+  # -1 because RunModule automatically increments one after this Act.
+  jumpCallback(args[0]-1)
 
 def HandlePWM(args, RTD):
   PWMModule.StartPWM(RTD, args[0], args[1], args[2])

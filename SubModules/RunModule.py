@@ -114,7 +114,7 @@ def RunSequence():
     runActArgs = runAct['arguments']
 
     # TODO: Currently PWM is non-blocking
-    ActHandler.HandleAct(runActName, runActArgs, RTD)
+    ActHandler.HandleAct(runActName, runActArgs, RTD, SetRunIndex)
 
     time.sleep(0.1)
 

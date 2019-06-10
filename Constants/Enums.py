@@ -67,5 +67,6 @@ ActName = enum(
   IO           = "IO",
   PWM          = "PWM",
   PWM_SEQUENCE = "PWM_SEQUENCE",
-  PWM_MATRIX   = "PWM_MATRIX"
+  PWM_MATRIX   = "PWM_MATRIX",
+  JUMP         = "JUMP"
 )
