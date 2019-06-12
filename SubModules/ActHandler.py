@@ -12,6 +12,8 @@ def HandleAct(runActName, runActArgs, RTD, jumpCallback):
 
   if runActName == ActName.MOVE_TO:
     HandleMoveTo(runActArgs)
+  elif runActName == ActName.HOME:
+    HandleHome(runActArgs)
   elif runActName == ActName.WAIT:
     HandleWait(runActArgs)
   elif runActName == ActName.IO:
@@ -34,6 +36,16 @@ def HandleMoveTo(args):
   numSteps = args[2]
   delay = args[3]
   MoveModule.StartMoving(axis, direction, numSteps, delay)
+
+  while MoveModule.GetIsMoving():
+    time.sleep(0.5)
+
+def HandleHome(args):
+  axis = args[0]
+  direction = args[1]
+  delay = args[2]
+  timeout = args[3]
+  MoveModule.StartHoming(axis, direction, delay, timeout)
 
   while MoveModule.GetIsMoving():
     time.sleep(0.5)

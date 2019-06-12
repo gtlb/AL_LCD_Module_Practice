@@ -40,16 +40,19 @@ class RunConfig:
       pinMapX[PIN.CLK] = int(config.get('PinMap', 'XClk'))
       pinMapX[PIN.DIR] = int(config.get('PinMap', 'XDir'))
       pinMapX[PIN.ENA] = int(config.get('PinMap', 'XEna'))
+      pinMapX[PIN.HOME] = int(config.get('PinMap', 'XHome'))
 
       pinMapY = {}
       pinMapY[PIN.CLK] = int(config.get('PinMap', 'YClk'))
       pinMapY[PIN.DIR] = int(config.get('PinMap', 'YDir'))
       pinMapY[PIN.ENA] = int(config.get('PinMap', 'YEna'))
+      pinMapY[PIN.HOME] = int(config.get('PinMap', 'YHome'))
 
       pinMapZ = {}
       pinMapZ[PIN.CLK] = int(config.get('PinMap', 'ZClk'))
       pinMapZ[PIN.DIR] = int(config.get('PinMap', 'ZDir'))
       pinMapZ[PIN.ENA] = int(config.get('PinMap', 'ZEna'))
+      pinMapZ[PIN.HOME] = int(config.get('PinMap', 'ZHome'))
 
       RunConfig.pinMap = {}
       RunConfig.pinMap[AXIS.X] = pinMapX

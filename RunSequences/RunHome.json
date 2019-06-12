@@ -4,40 +4,32 @@
     "arguments": [1]
   },
   {
-    "name": "MOVE_TO",
-    "arguments": ["Z", 1, 200, 0.005]
+    "name": "HOME",
+    "arguments": ["Y", 0, 0.01, 10]
   },
   {
     "name": "MOVE_TO",
-    "arguments": ["Y", 1, 2000, 0.001]
+    "arguments": ["Z", 1, 200, 0.01]
+  },
+  {
+    "name": "MOVE_TO",
+    "arguments": ["Y", 1, 1300, 0.001]
   },
   {
     "name": "WAIT",
     "arguments": [1]
   },
   {
-    "name": "IO",
-    "arguments": [18, 1]
+    "name": "MOVE_TO",
+    "arguments": ["Z", 0, 200, 0.01]
+  },
+  {
+    "name": "MOVE_TO",
+    "arguments": ["Y", 0, 1000, 0.001]
   },
   {
     "name": "WAIT",
     "arguments": [1]
-  },
-  {
-    "name": "MOVE_TO",
-    "arguments": ["Z", 0, 200, 0.005]
-  },
-  {
-    "name": "MOVE_TO",
-    "arguments": ["Y", 0, 2000, 0.001]
-  },
-  {
-    "name": "WAIT",
-    "arguments": [1]
-  },
-  {
-    "name": "IO",
-    "arguments": [18, 0]
   },
   {
     "name": "WAIT",

@@ -4,7 +4,8 @@ def enum(**enums):
 PinMap = enum(
   CLK = "CLK",
   DIR = "DIR",
-  ENA = "ENA"
+  ENA = "ENA",
+  HOME = "HOME"
 )
 
 IO = enum(
@@ -63,6 +64,7 @@ STATE = enum(
 
 ActName = enum(
   MOVE_TO      = "MOVE_TO",
+  HOME         = "HOME",
   WAIT         = "WAIT",
   IO           = "IO",
   PWM          = "PWM",

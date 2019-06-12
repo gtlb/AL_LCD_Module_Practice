@@ -18,18 +18,20 @@ def Setup():
   GPIO.setup(pinMap[AXIS.X][PIN.CLK], GPIO.OUT, initial = GPIO.LOW)
   GPIO.setup(pinMap[AXIS.X][PIN.DIR], GPIO.OUT, initial = GPIO.LOW)
   GPIO.setup(pinMap[AXIS.X][PIN.ENA], GPIO.OUT, initial = GPIO.HIGH)
+  GPIO.setup(pinMap[AXIS.X][PIN.HOME], GPIO.IN)
 
   GPIO.setup(pinMap[AXIS.Y][PIN.CLK], GPIO.OUT, initial = GPIO.LOW)
   GPIO.setup(pinMap[AXIS.Y][PIN.DIR], GPIO.OUT, initial = GPIO.LOW)
   GPIO.setup(pinMap[AXIS.Y][PIN.ENA], GPIO.OUT, initial = GPIO.HIGH)
+  GPIO.setup(pinMap[AXIS.Y][PIN.HOME], GPIO.IN)
 
   GPIO.setup(pinMap[AXIS.Z][PIN.CLK], GPIO.OUT, initial = GPIO.LOW)
   GPIO.setup(pinMap[AXIS.Z][PIN.DIR], GPIO.OUT, initial = GPIO.LOW)
   GPIO.setup(pinMap[AXIS.Z][PIN.ENA], GPIO.OUT, initial = GPIO.HIGH)
+  GPIO.setup(pinMap[AXIS.Z][PIN.HOME], GPIO.IN)
 
   GPIO.setup(pinSol, GPIO.OUT, initial = GPIO.LOW)
   ############################
 
 def cleanup():
   GPIO.cleanup()
-

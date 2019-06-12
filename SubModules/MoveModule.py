@@ -14,6 +14,8 @@ pinMap = RunConfig.pinMap
 currentPulseMap = {}
 currentPulseMapLock = Lock()
 
+homeTimeLimit = None
+
 if H.__raspberry__:
   import RPi.GPIO as GPIO
 
@@ -49,6 +51,18 @@ def StartMoving(axis, direction, numSteps, delay):
                                 args=[axis, direction, numSteps, delay])
   moveThread.daemon = True
   moveThread.start()
+
+def StartHoming(axis, direction, delay, timeout):
+  global homeTimeLimit
+
+  SetIsMoving(True)
+
+  if timeout is not None:
+    homeTimeLimit = time.time() + timeout
+
+  homeThread = threading.Thread(target = RunHome, args=[axis, direction, delay])
+  homeThread.daemon = True
+  homeThread.start()
 
 def UpdatePulse(axis, pulse):
   global currentPulseMap
@@ -98,3 +112,40 @@ def RunMove(axis, direction, numSteps, delay):
   SetIsMoving(False)
 
   UpdatePulse(axis, GetPulse(axis) + numSteps)
+
+def RunHome(axis, direction, delay):
+  global currentPulseMap, homeTimeLimit
+
+  homeSensor = None
+  runFinished = True
+
+  if H.__raspberry__:
+    GPIO.output(pinMap[axis][PIN.DIR], direction)
+    sensorPin = pinMap[axis][PIN.HOME]
+
+  i = 0
+  while (GPIO.input(sensorPin)):
+    if not isMoving:
+      runFinished = False
+      if H.__verbose__:
+        print("Homing has been aborted.")
+      break
+
+    if homeTimeLimit is not None and homeTimeLimit < time.time():
+      runFinished = False
+      if H.__verbose__:
+        print("Homing has been timed out.")
+      break
+
+    if H.__raspberry__:
+      GPIO.output(pinMap[axis][PIN.CLK], (i+1)%2)
+      i += 1
+
+    time.sleep(delay)
+
+  if runFinished and H.__verbose__:
+    print("Homing {} Complete.".format(axis))
+
+  SetIsMoving(False)
+
+  UpdatePulse(axis, 0)
