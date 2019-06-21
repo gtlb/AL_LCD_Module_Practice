@@ -52,6 +52,17 @@ def StartMoving(axis, direction, numSteps, delay):
   moveThread.daemon = True
   moveThread.start()
 
+def StartMovingTrapezoid(axis, direction, numSteps, delay,
+                         stepsAccelerate, stepsDecelerate, delayStart):
+  SetIsMoving(True)
+
+  moveTrapThread = threading.Thread(
+                     target = RunMoveTrapezoid,
+                     args=[axis, direction, numSteps, delay,
+                           stepsAccelerate, stepsDecelerate, delayStart])
+  moveTrapThread.daemon = True
+  moveTrapThread.start()
+
 def StartHoming(axis, direction, delay, timeout):
   global homeTimeLimit
 
@@ -112,6 +123,84 @@ def RunMove(axis, direction, numSteps, delay):
   SetIsMoving(False)
 
   UpdatePulse(axis, GetPulse(axis) + numSteps)
+
+
+def RunMoveTrapezoid(axis, direction, numSteps, delayTarget,
+                     stepsAccelerate, stepsDecelerate, delayStart):
+  global currentPulseMap
+
+  if H.__raspberry__:
+    GPIO.output(pinMap[axis][PIN.DIR], direction)
+
+  # TODO: config these
+  # stepsAccelerate = 200
+  # stepsDecelerate = 200
+  # delayStart = 0.1
+
+  runFinished = True
+  delay = delayStart
+  for i in range(numSteps):
+    if not isMoving:
+      runFinished = False
+
+      if H.__verbose__:
+        print("Moving Trapezoid has been aborted.")
+
+      break
+
+    # Determining delay
+
+    # Case 1 : Cannot accelerate to the max.
+    sa = stepsAccelerate
+    sd = stepsDecelerate
+    if stepsAccelerate + stepsDecelerate >= numSteps:
+      accelerateRange = numSteps / (sa + sd) * sa
+      ar = accelerateRange
+      print("Accelerate Range: {}".format(ar))
+      ratio = ar / sa
+      newDelayTarget = delayStart * (1 - ratio) + delayTarget * ratio
+      print("New Delay Target: {}".format(newDelayTarget))
+
+      if i < accelerateRange:
+        print("Accelerate")
+        ratio = i / accelerateRange
+        delay = delayStart * (1 - ratio) + newDelayTarget * ratio
+      else:
+        print("Decelerate")
+        ratio = (i - ar) / (numSteps - ar)
+        delay = newDelayTarget * (1 - ratio) + delayStart * ratio
+
+    # Case 2 : Can accelerate to the max.
+    else:
+      if i <= stepsAccelerate:
+        print("Accelerate")
+        ratio = i / stepsAccelerate
+        delay = delayStart * (1 - ratio) + delayTarget * ratio
+      elif i >= numSteps - stepsDecelerate:
+        print("Decelerate")
+        ratio = (i - (numSteps - stepsDecelerate)) / stepsDecelerate
+        delay = delayTarget * (1 - ratio) + delayStart * ratio
+      else:
+        print("Stable")
+        delay = delayTarget
+
+    print("Step: {}, Delay: {}".format(i, delay))
+
+    if H.__raspberry__:
+      GPIO.output(pinMap[axis][PIN.CLK], GPIO.HIGH)
+    time.sleep(delay)
+
+    if H.__raspberry__:
+      GPIO.output(pinMap[axis][PIN.CLK], GPIO.LOW)
+    time.sleep(delay)
+
+  if runFinished and H.__verbose__:
+    print("Moving Trapezoid {} by {} Complete.".format(axis, numSteps))
+
+  SetIsMoving(False)
+
+  UpdatePulse(axis, GetPulse(axis) + numSteps)
+
 
 def RunHome(axis, direction, delay):
   global currentPulseMap, homeTimeLimit

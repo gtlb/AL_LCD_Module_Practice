@@ -12,6 +12,8 @@ def HandleAct(runActName, runActArgs, RTD, jumpCallback):
 
   if runActName == ActName.MOVE_TO:
     HandleMoveTo(runActArgs)
+  elif runActName == ActName.MOVE_TO_TRAP:
+    HandleMoveToTrap(runActArgs)
   elif runActName == ActName.HOME:
     HandleHome(runActArgs)
   elif runActName == ActName.WAIT:
@@ -36,6 +38,20 @@ def HandleMoveTo(args):
   numSteps = args[2]
   delay = args[3]
   MoveModule.StartMoving(axis, direction, numSteps, delay)
+
+  while MoveModule.GetIsMoving():
+    time.sleep(0.5)
+
+def HandleMoveToTrap(args):
+  axis = args[0]
+  direction = args[1]
+  numSteps = args[2]
+  delay = args[3]
+  numAccelerate = args[4]
+  numDecelerate = args[5]
+  delayStart = args[6]
+  MoveModule.StartMovingTrapezoid(axis, direction, numSteps, delay,
+                                  numAccelerate, numDecelerate, delayStart)
 
   while MoveModule.GetIsMoving():
     time.sleep(0.5)

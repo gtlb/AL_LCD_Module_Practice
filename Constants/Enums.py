@@ -64,6 +64,7 @@ STATE = enum(
 
 ActName = enum(
   MOVE_TO      = "MOVE_TO",
+  MOVE_TO_TRAP = "MOVE_TO_TRAP",
   HOME         = "HOME",
   WAIT         = "WAIT",
   IO           = "IO",
