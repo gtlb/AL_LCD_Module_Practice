@@ -1,0 +1,54 @@
+[
+  {
+    "name": "WAIT",
+    "arguments": [1]
+  },
+  {
+    "name": "MOVE_TO",
+    "arguments": ["Z", 1, 200, 0.005]
+  },
+  {
+    "name": "MOVE_TO_TRAP",
+    "arguments": ["Z", 1, 200, 0.005, 100, 100, 0.05]
+  },
+  {
+    "name": "MOVE_TO",
+    "arguments": ["Y", 1, 2000, 0.001]
+  },
+  {
+    "name": "WAIT",
+    "arguments": [1]
+  },
+  {
+    "name": "IO",
+    "arguments": [18, 1]
+  },
+  {
+    "name": "WAIT",
+    "arguments": [1]
+  },
+  {
+    "name": "MOVE_TO",
+    "arguments": ["Z", 0, 200, 0.005]
+  },
+  {
+    "name": "MOVE_TO",
+    "arguments": ["Y", 0, 2000, 0.001]
+  },
+  {
+    "name": "WAIT",
+    "arguments": [1]
+  },
+  {
+    "name": "IO",
+    "arguments": [18, 0]
+  },
+  {
+    "name": "WAIT",
+    "arguments": [5]
+  },
+  {
+    "name": "JUMP",
+    "arguments": [0]
+  }
+]

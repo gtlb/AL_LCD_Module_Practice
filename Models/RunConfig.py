@@ -1,6 +1,8 @@
 import ast
 import configparser
+import json
 import Constants.Constants as C
+from os import listdir
 from pynput.keyboard import Key
 from Constants.Enums import Axis as AXIS
 from Constants.Enums import Direction as DIR
@@ -15,6 +17,9 @@ class RunConfig:
   axisDelay = None
   stepDirection = None
   pwm = None
+  pwmSequence = None
+  pwmMatrix = None
+  runSequencesTitles = None
 
   @staticmethod
   def getInstance():
@@ -35,16 +40,19 @@ class RunConfig:
       pinMapX[PIN.CLK] = int(config.get('PinMap', 'XClk'))
       pinMapX[PIN.DIR] = int(config.get('PinMap', 'XDir'))
       pinMapX[PIN.ENA] = int(config.get('PinMap', 'XEna'))
+      pinMapX[PIN.HOME] = int(config.get('PinMap', 'XHome'))
 
       pinMapY = {}
       pinMapY[PIN.CLK] = int(config.get('PinMap', 'YClk'))
       pinMapY[PIN.DIR] = int(config.get('PinMap', 'YDir'))
       pinMapY[PIN.ENA] = int(config.get('PinMap', 'YEna'))
+      pinMapY[PIN.HOME] = int(config.get('PinMap', 'YHome'))
 
       pinMapZ = {}
       pinMapZ[PIN.CLK] = int(config.get('PinMap', 'ZClk'))
       pinMapZ[PIN.DIR] = int(config.get('PinMap', 'ZDir'))
       pinMapZ[PIN.ENA] = int(config.get('PinMap', 'ZEna'))
+      pinMapZ[PIN.HOME] = int(config.get('PinMap', 'ZHome'))
 
       RunConfig.pinMap = {}
       RunConfig.pinMap[AXIS.X] = pinMapX
@@ -73,11 +81,22 @@ class RunConfig:
       RunConfig.pwm[PWM.DUTY_CYCLE_LIST] \
         = ast.literal_eval(config.get('PWM', PWM.DUTY_CYCLE_LIST))
 
+      fp = open(C.PWM_SEQUENCE_FILEPATH)
+      RunConfig.pwmSequence = json.load(fp)
+
+      fp = open(C.PWM_MATRIX_FILEPATH)
+      RunConfig.pwmMatrix = json.load(fp)
+
+      RunConfig.runSequencesTitles = listdir(C.RUN_SEQUENCES_FILEPATH)
+
       print(RunConfig.pinSol)
       print(RunConfig.pinMap)
       print(RunConfig.axisDelay)
       print(RunConfig.stepDirection)
       print(RunConfig.pwm)
+      print(RunConfig.pwmSequence)
+      print(RunConfig.pwmMatrix)
+      print(RunConfig.runSequencesTitles)
 
       RunConfig.__instance = self
 

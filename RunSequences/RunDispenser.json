@@ -1,0 +1,30 @@
+[
+  {
+    "name": "MOVE_TO",
+    "arguments": ["Y", 1]
+  },
+  {
+    "name": "MOVE_TO",
+    "arguments": ["Z", 1]
+  },
+  {
+    "name": "WAIT",
+    "arguments": [1]
+  },
+  {
+    "name": "MOVE_TO",
+    "arguments": ["Z", 0]
+  },
+  {
+    "name": "MOVE_TO",
+    "arguments": ["Y", 2]
+  },
+  {
+    "name": "MOVE_TO_MULT",
+    "arguments": [["Y", "A"], [3, 2]]
+  },
+  {
+    "name": "WAIT",
+    "arguments": [5]
+  }
+]
