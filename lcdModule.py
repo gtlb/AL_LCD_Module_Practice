@@ -164,6 +164,7 @@ def on_press(key):
     if pageMode is PAGE_STYLE.JOG:
       jogIndex = cursorIndex[STATE.JOG] + pageDisplayIndex[STATE.JOG]
       axis = stateMachine[STATE.JOG][VALUE][jogIndex]
+      print('current axis:', axis)
 
       if H.__verbose__:
         jogMesage = ", Plus" if key is Key.up else ", Minus"
@@ -171,6 +172,7 @@ def on_press(key):
 
       direction = DIR.PLUS if key is Key.up else DIR.MINUS
       JogModule.StartJog(axis, direction)
+     # print('pulse counter after :', JogModule.pulseCounter)
 
     if pageMode is PAGE_STYLE.EDIT:
       if currentState is STATE.PWM_FREQUENCY:

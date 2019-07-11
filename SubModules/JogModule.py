@@ -47,9 +47,9 @@ def JogHandler():
       if H.__verbose__:
         print("Jogging in Axis: " + joggingAxis)
 
-      GPIOOutput(pinMap[joggingAxis][PIN.CLK], (pulseCounter+1)%2)
+      GPIOOutput(pinMap[joggingAxis][PIN.CLK], (pulseCounter+1) % 2)
       pulseCounter += 1
-
+          
       time.sleep(RunConfig.axisDelay[joggingAxis])
     else:
       time.sleep(1)

@@ -38,6 +38,7 @@ def StartRunSequence(sequenceTitle, rtd):
   SetRunIndex(0)
   SetIsRunSequence(True)
 
+  #RunSequence() ---> function call also runs well for one motor   
   runThread = threading.Thread(target = RunSequence)
   runThread.daemon = True
   runThread.start()
@@ -96,6 +97,7 @@ def LoadRunSequence(sequenceTitle):
 
 def RunSequence():
   global runIndex, runSequence, runSequenceTitle, RTD
+  print('RunSequenc() executing ---')
 
   SetupRaspberryPi(runSequence)
 

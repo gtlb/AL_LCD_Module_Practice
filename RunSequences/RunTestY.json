@@ -1,0 +1,38 @@
+[
+  {
+    "name": "WAIT",
+    "arguments": [3]
+  },
+  {
+    "name": "HOME",
+    "arguments": ["Y", 0, 0.01, 21]
+  },
+  {
+    "name": "MOVE_TO",
+    "arguments": ["Y", 1, 200, 0.01]
+  },
+  {
+    "name": "MOVE_TO",
+    "arguments": ["Y", 1, 1300, 0.001]
+  },
+  {
+    "name": "WAIT",
+    "arguments": [1]
+  },
+  {
+    "name": "MOVE_TO",
+    "arguments": ["Y", 0, 200, 0.01]
+  },
+  {
+    "name": "MOVE_TO",
+    "arguments": ["Y", 0, 1000, 0.001]
+  },
+  {
+    "name": "WAIT",
+    "arguments": [5]
+  },
+  {
+    "name": "JUMP",
+    "arguments": [0]
+  }
+]

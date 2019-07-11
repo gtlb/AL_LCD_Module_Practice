@@ -15,7 +15,10 @@ IO = enum(
 Axis = enum(
   X = "X",
   Y = "Y",
-  Z = "Z"
+  Z = "Z",
+  A = "A",
+  B = "B",
+  C = "C"
 )
 
 Direction = enum(
@@ -64,6 +67,7 @@ STATE = enum(
 
 ActName = enum(
   MOVE_TO      = "MOVE_TO",
+  MOVE_TO_ABS  = "MOVE_TO_ABS",
   MOVE_TO_TRAP = "MOVE_TO_TRAP",
   HOME         = "HOME",
   WAIT         = "WAIT",

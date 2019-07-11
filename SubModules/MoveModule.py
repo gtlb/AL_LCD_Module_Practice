@@ -52,6 +52,14 @@ def StartMoving(axis, direction, numSteps, delay):
   moveThread.daemon = True
   moveThread.start()
 
+def StartMovingAbs(axis, targetPulse, delay):
+  SetIsMoving(True)
+
+  moveAbsThread = threading.Thread(target = RunMoveAbs,
+                                   args=[axis, targetPulse, delay])
+  moveAbsThread.daemon = True
+  moveAbsThread.start()
+
 def StartMovingTrapezoid(axis, direction, numSteps, delay,
                          stepsAccelerate, stepsDecelerate, delayStart):
   SetIsMoving(True)
@@ -77,6 +85,7 @@ def StartHoming(axis, direction, delay, timeout):
 
 def UpdatePulse(axis, pulse):
   global currentPulseMap
+  #print('updatePulse pulse:', pulse)
   currentPulseMapLock.acquire()
   currentPulseMap[axis] = pulse
   currentPulseMapLock.release()
@@ -121,8 +130,42 @@ def RunMove(axis, direction, numSteps, delay):
     print("Moving {} by {} Complete.".format(axis, numSteps))
 
   SetIsMoving(False)
-
+  #print('GetPulse(axis):', GetPulse(axis), 'numSteps:', numSteps)
   UpdatePulse(axis, GetPulse(axis) + numSteps)
+
+
+def RunMoveAbs(axis, targetPulse, delay):
+  global currentPulseMap
+
+  currentPulse = GetPulse(axis)
+  numSteps = abs(targetPulse - currentPulse)
+
+  if H.__raspberry__:
+    direction = targetPulse > currentPulse
+    GPIO.output(pinMap[axis][PIN.DIR], direction)
+
+  runFinished = True
+  for i in range(numSteps * 2):
+    if not isMoving:
+      runFinished = False
+
+      if H.__verbose__:
+        print("Moving has been aborted.")
+
+      break
+
+    if H.__raspberry__:
+      GPIO.output(pinMap[axis][PIN.CLK], (i+1)%2)
+
+    time.sleep(delay)
+
+  if runFinished and H.__verbose__:
+    print("Moving {} from {} to {} Complete." \
+      .format(axis, currentPulse, targetPulse))
+
+  SetIsMoving(False)
+
+  UpdatePulse(axis, targetPulse)
 
 
 def RunMoveTrapezoid(axis, direction, numSteps, delayTarget,
@@ -204,16 +247,20 @@ def RunMoveTrapezoid(axis, direction, numSteps, delayTarget,
 
 def RunHome(axis, direction, delay):
   global currentPulseMap, homeTimeLimit
-
+  #print('RunHome Started', axis, direction, delay)
   homeSensor = None
   runFinished = True
 
   if H.__raspberry__:
     GPIO.output(pinMap[axis][PIN.DIR], direction)
     sensorPin = pinMap[axis][PIN.HOME]
+    #print(sensorPin)  #19
+    #print(GPIO.input(sensorPin))  #1    
 
   i = 0
   while (GPIO.input(sensorPin)):
+    #print("in while" , GPIO.input(sensorPin))   #1...?
+    
     if not isMoving:
       runFinished = False
       if H.__verbose__:

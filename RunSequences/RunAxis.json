@@ -8,6 +8,34 @@
     "arguments": ["Z", 1, 200, 0.005]
   },
   {
+    "name": "MOVE_TO_ABS",
+    "arguments": ["Z", 200, 0.005]
+  },
+  {
+    "name": "WAIT",
+    "arguments": [3]
+  },
+  {
+    "name": "MOVE_TO_ABS",
+    "arguments": ["Z", 400, 0.005]
+  },
+  {
+    "name": "WAIT",
+    "arguments": [3]
+  },
+  {
+    "name": "MOVE_TO_ABS",
+    "arguments": ["Y", 400, 0.005]
+  },
+  {
+    "name": "WAIT",
+    "arguments": [3]
+  },
+  {
+    "name": "MOVE_TO_ABS",
+    "arguments": ["Z", 0, 0.005]
+  },
+  {
     "name": "MOVE_TO_TRAP",
     "arguments": ["Z", 1, 200, 0.005, 100, 100, 0.05]
   },
