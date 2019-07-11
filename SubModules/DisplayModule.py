@@ -47,14 +47,6 @@ def DisplayJogAxis(axis):
 
 #### Display Functions #########################################################
 
-def DisplayPWM():
-  return [
-    "PWM_SIMPLE",
-    "PWM_SEQUENCE",
-    "PWM_MATRIX",
-    ""
-  ]
-
 def DisplayPWMSimple(RTDTemp):
   return [
     "PWM      {}".format(FormatTemp(RTDTemp)),

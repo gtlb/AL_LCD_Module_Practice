@@ -24,8 +24,8 @@ def HandleAct(runActName, runActArgs, RTD, jumpCallback):
     HandleIO(runActArgs)
   elif runActName == ActName.JUMP:
     HandleJump(runActArgs, jumpCallback)
-  elif runActName == ActName.PWM:
-    HandlePWM(runActArgs, RTD)
+  elif runActName == ActName.PWM_SIMPLE:
+    HandlePWMSimple(runActArgs, RTD)
   elif runActName == ActName.PWM_SEQUENCE:
     HandlePWMSequence(runActArgs, RTD)
   elif runActName == ActName.PWM_MATRIX:
@@ -89,8 +89,8 @@ def HandleJump(args, jumpCallback):
   # -1 because RunModule automatically increments one after this Act.
   jumpCallback(args[0]-1)
 
-def HandlePWM(args, RTD):
-  PWMModule.StartPWM(RTD, args[0], args[1], args[2])
+def HandlePWMSimple(args, RTD):
+  PWMModule.StartPWMSimple(RTD, args[0], args[1], args[2])
 
   while PWMModule.GetIsRunPWM():
     time.sleep(0.5)

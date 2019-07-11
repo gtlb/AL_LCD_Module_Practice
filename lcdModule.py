@@ -1,3 +1,4 @@
+
 import Header as H
 import threading
 import time
@@ -47,6 +48,7 @@ states = [
   STATE.RUN,
   STATE.RUN_SEQUENCE,
   STATE.PWM,
+  STATE.PWM_SIMPLE,
   STATE.PWM_SEQUENCE,
   STATE.PWM_MATRIX,
   STATE.SETTINGS,
@@ -98,6 +100,7 @@ for state in states:
   elif state is STATE.PWM:
     stateMachine[state] = {
       DISPLAY   : [C.PWM_SIMPLE, C.PWM_SEQUENCE, C.PWM_MATRIX],
+      VALUE     : [C.PWM_SIMPLE, C.PWM_SEQUENCE, C.PWM_MATRIX],
       Key.left  : STATE.MAIN,
       Key.right : [STATE.PWM_SIMPLE, STATE.PWM_SEQUENCE, STATE.PWM_MATRIX]
     }
@@ -211,7 +214,7 @@ def on_press(key):
     if Key.right in stateMachine[currentState].keys():
       if absoluteIndex < len(stateMachine[currentState][key]):
         if stateMachine[currentState][key][absoluteIndex] is STATE.PWM_SIMPLE:
-          PWMModule.StartPWM(RTD,
+          PWMModule.StartPWMSimple(RTD,
             RunConfig.pwm[PWM.FREQUENCY],
             RunConfig.pwm[PWM.DUTY_CYCLE],
             None)
@@ -326,13 +329,7 @@ def DisplayLCD():
     displayTexts = DisplayModule.DisplayRunSequence(runSequenceTitle,
                      RunModule.GetRunText(),
                      RunModule.GetRunIndex())
-
-  elif currentState == STATE.PWM:
-    displayList = DisplayModule.DisplayPWM()
-    ci = cursorIndex[currentState]
-    pdi = pageDisplayIndex[currentState]
-    displayTexts = DisplayModule.DisplayEntries(displayList, pdi, ci)
-
+                     
   elif currentState == STATE.PWM_SIMPLE:
     displayTexts = DisplayModule.DisplayPWMSimple(PWMModule.GetRTDTemp())
 

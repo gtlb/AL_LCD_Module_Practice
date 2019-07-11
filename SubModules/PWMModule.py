@@ -112,7 +112,7 @@ def UpdateDutyCycle(newPWMDutyCycle):
     pwmDutyCycle = newPWMDutyCycle
     pwmInst.ChangeDutyCycle(pwmDutyCycle)
 
-def StartPWM(rtd, frequency, dutyCycle, timeout):
+def StartPWMSimple(rtd, frequency, dutyCycle, timeout):
   global RTD, pwmFrequency, pwmDutyCycle, pwmTimeLimit
   RTD = rtd
   pwmFrequency = frequency
