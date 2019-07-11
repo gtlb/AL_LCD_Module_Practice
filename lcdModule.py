@@ -71,10 +71,8 @@ for state in states:
 
   if state is STATE.MAIN:
     stateMachine[state] = {
-      DISPLAY   : [C.RUN, C.JOG, C.PWM, C.PWM_SEQUENCE, C.PWM_MATRIX,
-                   C.SETTINGS],
-      Key.right : [STATE.RUN, STATE.JOG, STATE.PWM, STATE.PWM_SEQUENCE,
-                   STATE.PWM_MATRIX, STATE.SETTINGS]
+      DISPLAY   : [C.RUN, C.JOG, C.PWM, C.SETTINGS],
+      Key.right : [STATE.RUN, STATE.JOG, STATE.PWM, STATE.SETTINGS]
     }
     pageSettings[state] = { MODE: PAGE_STYLE.NAVIGATION }
   elif state is STATE.RUN:
@@ -98,14 +96,22 @@ for state in states:
     stateMachine[state] = { Key.left : STATE.JOG }
     pageSettings[state] = { MODE: PAGE_STYLE.JOG }
   elif state is STATE.PWM:
-    stateMachine[state] = { Key.left : STATE.MAIN }
-    pageSettings[state] = { MODE: PAGE_STYLE.PWM }
+    stateMachine[state] = {
+      DISPLAY   : [C.PWM_SIMPLE, C.PWM_SEQUENCE, C.PWM_MATRIX],
+      Key.left  : STATE.MAIN,
+      Key.right : [STATE.PWM_SIMPLE, STATE.PWM_SEQUENCE, STATE.PWM_MATRIX]
+    }
+    pageSettings[state] = { MODE: PAGE_STYLE.NAVIGATION }
+  elif state is STATE.PWM_SIMPLE:
+    stateMachine[state] = { Key.left : STATE.PWM }
+    pageSettings[state] = { MODE: PAGE_STYLE.PWM_SIMPLE }
   elif state is STATE.PWM_SEQUENCE:
-    stateMachine[state] = { Key.left : STATE.MAIN }
+    stateMachine[state] = { Key.left : STATE.PWM }
     pageSettings[state] = { MODE: PAGE_STYLE.PWM_SEQUENCE }
   elif state is STATE.PWM_MATRIX:
-    stateMachine[state] = { Key.left : STATE.MAIN }
+    stateMachine[state] = { Key.left : STATE.PWM }
     pageSettings[state] = { MODE: PAGE_STYLE.PWM_MATRIX }
+
   elif state is STATE.SETTINGS:
     stateMachine[state] = {
       DISPLAY   : [C.PINMAP, C.PWM_FREQUENCY, C.PWM_DUTY_CYCLE],
@@ -184,21 +190,27 @@ def on_press(key):
       RunConfig.ModifyPWMDutyCycle(key)
       PWMModule.UpdateDutyCycle(RunConfig.pwm[PWM.DUTY_CYCLE])
 
+  # 1) left key -> stop
   if key is Key.left and Key.left in stateMachine[currentState].keys():
+    # stop PWM
     if currentState in [STATE.PWM, STATE.PWM_SEQUENCE, STATE.PWM_MATRIX]:
       PWMModule.StopPWM()
+    # stop RUN_SEQUENCE
     elif currentState in [STATE.RUN_SEQUENCE]:
       RunModule.StopRunSequence()
 
+  # 2) right key -> start
   if key is Key.right:
     absoluteIndex = pageDisplayIndex[currentState] + cursorIndex[currentState]
 
+    # start RUN
     if currentState is STATE.RUN:
       RunModule.StartRunSequence(RunConfig.runSequencesTitles[absoluteIndex], RTD)
 
+    # start PWM
     if Key.right in stateMachine[currentState].keys():
       if absoluteIndex < len(stateMachine[currentState][key]):
-        if stateMachine[currentState][key][absoluteIndex] is STATE.PWM:
+        if stateMachine[currentState][key][absoluteIndex] is STATE.PWM_SIMPLE:
           PWMModule.StartPWM(RTD,
             RunConfig.pwm[PWM.FREQUENCY],
             RunConfig.pwm[PWM.DUTY_CYCLE],
@@ -316,7 +328,13 @@ def DisplayLCD():
                      RunModule.GetRunIndex())
 
   elif currentState == STATE.PWM:
-    displayTexts = DisplayModule.DisplayPWM(PWMModule.GetRTDTemp())
+    displayList = DisplayModule.DisplayPWM()
+    ci = cursorIndex[currentState]
+    pdi = pageDisplayIndex[currentState]
+    displayTexts = DisplayModule.DisplayEntries(displayList, pdi, ci)
+
+  elif currentState == STATE.PWM_SIMPLE:
+    displayTexts = DisplayModule.DisplayPWMSimple(PWMModule.GetRTDTemp())
 
   elif currentState == STATE.PWM_SEQUENCE:
     displayTexts = DisplayModule.DisplayPWMSequence(PWMModule.GetRTDTemp(),

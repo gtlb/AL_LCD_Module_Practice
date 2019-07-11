@@ -30,6 +30,7 @@ PageStyle = enum(
   NAVIGATION = "NAVIGATION",
   JOG = "JOG",
   PWM = "PWM",
+  PWM_SIMPLE = "PWM_SIMPLE",
   PWM_SEQUENCE = "PWM_SEQUENCE",
   PWM_MATRIX = "PWM_MATRIX",
   EDIT = "EDIT",
@@ -61,18 +62,19 @@ STATE = enum(
   PINMAP_SINGLE  = "PINMAP_SINGLE",
 
   PWM            = "PWM",
+  PWM_SIMPLE     = "PWM_SIMPLE",
   PWM_SEQUENCE   = "PWM_SEQUENCE",
   PWM_MATRIX     = "PWM_MATRIX"
 )
 
 ActName = enum(
   MOVE_TO      = "MOVE_TO",
-  MOVE_TO_ABS  = "MOVE_TO_ABS",
   MOVE_TO_TRAP = "MOVE_TO_TRAP",
   HOME         = "HOME",
   WAIT         = "WAIT",
   IO           = "IO",
   PWM          = "PWM",
+  PWM_SIMPLE   = "PWM_SIMPLE",
   PWM_SEQUENCE = "PWM_SEQUENCE",
   PWM_MATRIX   = "PWM_MATRIX",
   JUMP         = "JUMP"
